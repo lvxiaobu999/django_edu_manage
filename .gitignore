@@ -1,0 +1,32 @@
+# --- Python 核心 ---
+.venv/
+venv/
+ENV/
+env/
+bin/
+lib/
+include/
+*.py[cod]
+*$py.class
+__pycache__/
+
+# --- Django 专属 ---
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+/static/
+
+# --- PyCharm/IntelliJ 专属 ---
+.idea/
+*.iml
+
+# --- 环境变量与密钥 ---
+.env
+.flaskenv
+*.bak
+*.swp
+
+# --- 操作系统临时文件 ---
+.DS_Store
+Thumbs.db
