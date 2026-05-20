@@ -4,15 +4,19 @@ services:
     container_name: django_edu_manage_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: django_edu_manage
-      POSTGRES_USER: django_user
-      POSTGRES_PASSWORD: django_password
+      POSTGRES_DB: ${POSTGRES_DB:-django_edu_manage}
+      POSTGRES_USER: ${POSTGRES_USER:-django_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-django_password}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U django_user -d django_edu_manage"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-django_user} -d ${POSTGRES_DB:-django_edu_manage}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

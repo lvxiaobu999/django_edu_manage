@@ -12,21 +12,60 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _load_env_file(path: Path, override: bool = False) -> None:
+    """加载简单的 .env 文件，支持中文注释、空行和双引号/单引号包裹的值。"""
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line.startswith('export '):
+            line = line[7:].strip()
+        if '=' not in line:
+            continue
+
+        key, value = line.split('=', 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+
+        if key in _ORIGINAL_ENV:
+            continue
+        if override or key not in os.environ:
+            os.environ[key] = value
+
+
+_ORIGINAL_ENV = set(os.environ)
+_load_env_file(BASE_DIR / '.env')
+DJANGO_ENV = os.environ.get('DJANGO_ENV', 'development').strip().lower() or 'development'
+_load_env_file(BASE_DIR / f'.env.{DJANGO_ENV}', override=True)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_%_yad7fy6o)xarphb2yr2t^1f_u5av#n&0ooo7av(fpasd_b+'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-for-development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').strip().lower() in {'1', 'true', 'yes', 'on'}
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
 
 
 # Application definition
