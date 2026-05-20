@@ -1,162 +1,181 @@
-# PostgreSQL 与环境配置开发文档
+# settings 模块与环境配置开发文档
 
 ## 目标
 
-本次改造的目标是把数据库配置从“写死在 `settings.py`”改成“通过 `.env` 系列文件管理”，这样你可以很自然地切换开发、测试和生产环境。
+本次调整把原来的 `django_edu_manage/settings.py` 迁移为 `django_edu_manage/settings/` 模块，并支持在运行项目时通过 `DJANGO_ENV` 指定环境。
 
-## 这次做了什么
+不指定环境时，默认使用 `development`。
 
-### 1. Django 改成读取环境文件
+## settings 模块结构
 
-修改文件：
+当前结构：
 
-- [django_edu_manage/settings.py](../django_edu_manage/settings.py)
+- `django_edu_manage/settings/base.py`
+  - 公共配置
+  - 读取 `.env` 系列文件
+  - 配置 Django 应用、模板、数据库、静态文件等通用内容
 
-核心逻辑：
+- `django_edu_manage/settings/development.py`
+  - 开发环境配置
+  - 默认 `DEBUG=True`
+  - 默认允许 `127.0.0.1` 和 `localhost`
 
-- 先读取 `.env`
-- 再按 `DJANGO_ENV` 读取 `.env.development` 或 `.env.production`
-- 系统已经手工设置的环境变量优先，不会被文件覆盖
+- `django_edu_manage/settings/production.py`
+  - 生产环境配置
+  - 默认 `DEBUG=False`
+  - 生产环境应明确配置 `SECRET_KEY`、`ALLOWED_HOSTS` 和数据库连接
 
-当前支持的环境变量：
+- `django_edu_manage/settings/__init__.py`
+  - 兼容 `django_edu_manage.settings` 这种默认写法
+  - 会根据 `DJANGO_ENV` 自动导入 development 或 production
 
-- `DJANGO_ENV`
-- `DEBUG`
-- `SECRET_KEY`
-- `ALLOWED_HOSTS`
-- `DJANGO_DB_ENGINE`
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `POSTGRES_HOST`
-- `POSTGRES_PORT`
+## 启动入口
 
-### 2. PostgreSQL 连接仍然保留
+这些文件已经支持按环境选择 settings：
 
-说明：
+- `manage.py`
+- `django_edu_manage/asgi.py`
+- `django_edu_manage/wsgi.py`
 
-- 当 `DJANGO_DB_ENGINE=django.db.backends.postgresql` 时，Django 使用 PostgreSQL
-- 不设置时，项目自动回退到 SQLite
-- 这样可以先跑项目，再慢慢切 PostgreSQL
+它们会读取：
 
-### 3. Docker Compose 也改成读环境变量
-
-修改文件：
-
-- [docker-compose.yml](../docker-compose.yml)
-
-说明：
-
-- PostgreSQL 的数据库名、用户名、密码、端口都改成变量
-- 避免写死在 YAML 里
-- 方便不同环境使用不同配置
-
-### 4. 补了环境文件示例
-
-新增文件：
-
-- [.env.example](../.env.example)
-- [.env.development.example](../.env.development.example)
-- [.env.production.example](../.env.production.example)
-
-说明：
-
-- 这些是示例文件，适合提交到 Git
-- 真正的 `.env`、`.env.development`、`.env.production` 不应该提交
-
-### 5. 更新 `.gitignore`
-
-修改文件：
-
-- [`.gitignore`](../.gitignore)
-
-新增忽略规则：
-
-- `.env`
-- `.env.*`
-- `.idea/`
-- `.vscode/`
-- `db.sqlite3`
-- `__pycache__/`
-
-保留提交的文件：
-
-- `.env.example`
-- `.env.development.example`
-- `.env.production.example`
-
-## 环境文件怎么用
-
-### 开发环境
-
-创建 `.env.development`，内容可以参考 `.env.development.example`。
-
-### 生产环境
-
-创建 `.env.production`，内容可以参考 `.env.production.example`。
-
-### 通用配置
-
-创建 `.env`，放一些所有环境都通用的配置，比如基础密钥或默认值。
-
-## 启动顺序
-
-### 1. 安装依赖
-
-```powershell
-uv sync
+```env
+DJANGO_ENV=development
 ```
 
-### 2. 启动 PostgreSQL
+然后自动设置：
 
-```powershell
-docker compose up -d postgres
+```text
+django_edu_manage.settings.development
 ```
 
-### 3. 启动开发模式
+如果设置：
 
-```powershell
-uv run python manage.py runserver
+```env
+DJANGO_ENV=production
 ```
 
-如果你想切到 PostgreSQL：
+则会使用：
 
-```powershell
-$env:DJANGO_DB_ENGINE='django.db.backends.postgresql'
-uv run python manage.py runserver
+```text
+django_edu_manage.settings.production
 ```
 
-## 允许提交到 Git 的文件
+## 环境文件约定
 
-- 业务代码
-- 路由文件
-- 文档
-- 示例环境文件
-- `docker-compose.yml`
-- `pyproject.toml`
-- `uv.lock`
-
-## 不应该提交到 Git 的文件
+可以提交到 Git：
 
 - `.env`
 - `.env.development`
 - `.env.production`
+
+不提交到 Git：
+
+- `.env.local`
+- `.env.development.local`
+- `.env.production.local`
+
+命名理解：
+
+- `.env`：通用默认配置
+- `.env.development`：开发环境默认配置
+- `.env.production`：生产环境默认配置
+- `.local`：当前电脑自己的私有覆盖配置
+
+## 配置加载顺序
+
+配置优先级从低到高：
+
+1. `.env`
+2. `.env.development` 或 `.env.production`
+3. `.env.local`
+4. `.env.development.local` 或 `.env.production.local`
+5. 系统环境变量
+
+也就是说，本机 `.local` 文件可以覆盖团队默认配置，系统环境变量可以覆盖所有文件配置。
+
+## 指定环境运行
+
+### 默认开发环境
+
+不指定 `DJANGO_ENV` 时默认就是开发环境：
+
+```powershell
+uv run python manage.py runserver
+```
+
+等价于：
+
+```powershell
+$env:DJANGO_ENV='development'
+uv run python manage.py runserver
+```
+
+### 指定生产环境
+
+```powershell
+$env:DJANGO_ENV='production'
+uv run python manage.py check
+```
+
+如果要临时绕过 `DJANGO_ENV`，也可以直接使用 Django 原生参数：
+
+```powershell
+uv run python manage.py check --settings=django_edu_manage.settings.production
+```
+
+## 数据库配置
+
+Django 使用 `DATABASE_URL` 连接数据库。
+
+PostgreSQL 示例：
+
+```env
+DATABASE_URL=postgres://django_user:django_password@localhost:5432/django_edu_manage
+```
+
+如果没有配置 `DATABASE_URL`，项目会回退到本地 SQLite。
+
+Docker Compose 使用这些变量初始化 PostgreSQL：
+
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_PORT`
+
+注意：
+
+- `DATABASE_URL` 是 Django 用的
+- `POSTGRES_*` 是 Docker PostgreSQL 容器用的
+- 两边的用户名、密码和数据库名要保持一致
+
+## Git 提交规则
+
+应该提交：
+
+- 业务代码
+- 文档
+- `docker-compose.yml`
+- `pyproject.toml`
+- `uv.lock`
+- `.env`
+- `.env.development`
+- `.env.production`
+
+不应该提交：
+
+- `.env.local`
+- `.env.development.local`
+- `.env.production.local`
 - `db.sqlite3`
 - `__pycache__/`
 - `.idea/`
 - `.vscode/`
-- 临时日志和临时文件
 
 ## 学习重点
 
-1. 配置不要写死在代码里
-2. 开发、生产环境要分离
-3. 示例文件和真实配置文件要分开管理
-4. `settings.py` 最好只负责读取配置，不直接写死秘密信息
-
-## 后续可以继续补的内容
-
-- `.env` 真文件模板生成脚本
-- 更完整的生产部署说明
-- Django 与 PostgreSQL 的迁移流程说明
-- 自动生成配置文件的脚本
+1. `settings.py` 适合拆成 settings 模块
+2. `base.py` 放公共配置
+3. `development.py` 和 `production.py` 只放环境差异
+4. `DJANGO_ENV` 负责选择运行环境
+5. `.local` 文件负责本机私有覆盖

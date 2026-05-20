@@ -17,8 +17,9 @@ media/
 staticfiles/
 /static/
 
-# --- 环境变量与密钥 ---
+# --- 本地私有环境覆盖文件 ---
 .env.local
+.env.*.local
 
 # --- IDE 配置 ---
 .idea/

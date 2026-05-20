@@ -2,164 +2,107 @@
 
 ## 项目概览
 
-这是一个名为 `django-edu-manage` 的 Django 项目，目前还处在非常早期的脚手架阶段。
+这是一个 Django 项目，项目名为 `django-edu-manage`。
 
-当前状态可以直接理解为：
+当前项目已经具备：
 
-- Django 项目已经创建完成
-- 已经有一个本地应用：`django_app`
-- 除了后台管理入口外，几乎还没有业务代码
-- 数据库当前使用 SQLite，适合本地开发和快速验证
-
-这个状态的特点是“结构已经搭好，但业务还没真正开始写”，所以后续加功能会比较顺手。
+- Django 基础项目结构
+- 一个本地应用：`django_app`
+- PostgreSQL 的 Docker Compose 配置
+- 基于 `django-environ` 的环境变量配置
+- 拆分后的 settings 模块
 
 ## 技术栈
 
-- Python: `>=3.14`
-- Django: `>=6.0.5`
-- 项目元数据：`pyproject.toml`
+- Python：`>=3.14`
+- Django：`>=6.0.5`
+- django-environ：用于读取 `.env` 配置
+- PostgreSQL：通过 Docker Compose 启动
+- uv：用于依赖管理和命令运行
 
-补充说明：
-
-- 这是标准的 Django 单体项目结构
-- 没有看到额外的前后端分离框架配置
-- 目前也没有引入复杂的第三方业务依赖
-
-## 目录结构说明
+## 目录结构
 
 - `manage.py`
-  - Django 的命令入口
-  - 常用来执行 `runserver`、`migrate`、`makemigrations` 等命令
+  - Django 命令入口
+  - 会根据 `DJANGO_ENV` 自动选择 settings 模块
 
-- `django_edu_manage/settings.py`
-  - 项目总配置文件
-  - 这里控制数据库、应用注册、模板、静态文件、国际化等内容
+- `django_edu_manage/settings/`
+  - Django 配置模块
+  - `base.py`：公共配置
+  - `development.py`：开发环境配置
+  - `production.py`：生产环境配置
+  - `__init__.py`：兼容 `django_edu_manage.settings` 写法
 
 - `django_edu_manage/urls.py`
   - 全局路由入口
-  - 当前只负责把 URL 分发给对应视图
 
 - `django_edu_manage/asgi.py`
   - ASGI 入口
-  - 适合后续接异步能力、WebSocket 之类的场景
 
 - `django_edu_manage/wsgi.py`
   - WSGI 入口
-  - 适合传统部署方式
 
 - `django_app/`
-  - 当前项目里的主应用
-  - 以后大部分业务逻辑大概率都会落在这里
+  - 当前主应用
+  - 目前还没有实际业务模型和视图
 
-  - `models.py`
-    - 目前还是空的
-    - 这里通常放数据库模型，比如 `Conversation`、`Message`
+- `docs/`
+  - 项目开发文档
 
-  - `views.py`
-    - 目前还是空的
-    - 这里通常处理请求并返回页面或接口数据
+## 环境选择
 
-  - `admin.py`
-    - 目前还是空的
-    - 这里用于把模型注册到 Django Admin 后台
+默认环境是：
 
-  - `apps.py`
-    - 应用配置文件
-    - 当前应用名是 `django_app`
+```text
+development
+```
 
-  - `migrations/`
-    - 迁移文件目录
-    - Django 会把模型变化记录到这里，方便同步数据库结构
+默认启动：
 
-## 配置说明
+```powershell
+uv run python manage.py runserver
+```
 
-从 `settings.py` 看，目前关键配置是这些：
+指定生产环境：
 
-- `DEBUG = True`
-  - 说明现在是开发模式
-  - 不适合直接上线生产环境
+```powershell
+$env:DJANGO_ENV='production'
+uv run python manage.py check
+```
 
-- `ALLOWED_HOSTS = []`
-  - 当前没有放行任何正式域名或主机
-  - 本地开发通常问题不大
+## 环境文件约定
 
-- `INSTALLED_APPS`
-  - 包含 Django 默认应用
-  - 另外注册了 `django_app.apps.DjangoAppConfig`
+可以提交到 Git：
 
-- 模板目录
-  - 配置了 `BASE_DIR / 'templates'`
-  - 说明项目未来可以使用全局模板目录
+- `.env`
+- `.env.development`
+- `.env.production`
 
-- 静态文件
-  - `STATIC_URL = 'static/'`
-  - 说明 CSS、JS、图片等静态资源会走这个前缀
+不提交到 Git：
 
-- 数据库
-  - 使用 SQLite
-  - 数据库文件是根目录下的 `db.sqlite3`
+- `.env.local`
+- `.env.development.local`
+- `.env.production.local`
 
-## 路由现状
+## 数据库
 
-当前 `urls.py` 里只暴露了一个入口：
+Django 通过 `DATABASE_URL` 连接数据库。
 
-- `admin/` -> Django 管理后台
+PostgreSQL 示例：
 
-也就是说：
+```env
+DATABASE_URL=postgres://django_user:django_password@localhost:5432/django_edu_manage
+```
 
-- 还没有业务首页
-- 还没有 API 路由
-- 还没有聊天相关接口
-- 还没有会话管理接口
+如果没有配置 `DATABASE_URL`，项目会回退到 SQLite。
 
-## 开发阶段判断
+## 当前开发阶段
 
-这个项目现在适合做的事情包括：
+项目目前还处于基础设施搭建阶段，适合继续做：
 
-- 设计业务模型
-- 规划聊天会话结构
-- 增加 URL 路由
-- 编写视图和接口
-- 接入模板或前后端页面
-- 增加用户登录与会话持久化
-
-换句话说，项目还没被业务逻辑“绑死”，现在是最适合补基础架构的时候。
-
-## 如果要做“聊天记忆”
-
-如果你的目标是让系统记住历史聊天记录，推荐的做法不是让模型自己“直接读数据库”，而是由 Django 后端先查数据，再把需要的上下文传给模型。
-
-建议增加的模型通常是：
-
-- `Conversation`
-  - 表示一个对话线程
-  - 可以存标题、所属用户、创建时间、更新时间、摘要等信息
-
-- `Message`
-  - 表示单条消息
-  - 可以存角色、内容、时间、所属会话等信息
-
-推荐的数据流是：
-
-1. 用户发消息时，先保存到 `Message`
-2. 模型回复后，也保存到 `Message`
-3. 每次新请求进来时，先查当前会话的历史消息
-4. 只把“最近几轮 + 必要摘要”传给模型
-5. 如果历史太长，就做摘要压缩
-
-这样做的好处是：
-
-- 历史可追溯
-- 容易分页和检索
-- 不会把整张表都塞进上下文
-- 后续可以按用户、会话、时间做过滤
-
-## 额外备注
-
-- 根目录下有一个 `dos.md`
-  - 内容看起来像迁移说明
-  - 但文件名可能是笔误，更像是想写 `docs`
-
-- 目前没有看到测试代码
-- 目前也没有看到实际业务模型
-- 所以这份文档更像是“项目起点说明”，方便你后面持续补充
+- 用户模型与登录
+- 业务模型设计
+- 聊天会话模型
+- API 路由
+- 后台管理配置
+- 测试用例补充
