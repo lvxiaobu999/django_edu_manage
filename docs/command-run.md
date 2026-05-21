@@ -7,6 +7,8 @@
 
 检测项目：```bash uv run python manage.py check ```
 
+启动开发服务器并指定环境：```bash uv run python manage.py check --settings=django_edu_manage.settings.production ```
+
 
 启动开发服务器： ```bash uv run manage.py runserver ```
 
