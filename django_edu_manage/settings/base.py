@@ -49,6 +49,8 @@ environ.Env.read_env(BASE_DIR / '.env.local', overwrite=True)
 environ.Env.read_env(BASE_DIR / f'.env.{DJANGO_ENV}.local', overwrite=True)
 os.environ.update(_original_environ)
 
+print(f"Loaded environment: DJANGO_ENV={DJANGO_ENV}, DEBUG={env('DEBUG')}, ALLOWED_HOSTS={env('ALLOWED_HOSTS')}")
+
 
 # SECRET_KEY 是 Django 用来做签名和安全校验的密钥。
 # 用途包括 session、csrf token、密码重置链接等签名。
@@ -88,6 +90,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_app.apps.DjangoAppConfig',
+    'apps.users.apps.UsersConfig',
 ]
 
 
@@ -222,3 +225,5 @@ USE_TZ = True
 # 当前值 static/ 表示静态资源路径类似 /static/app.css。
 # 生产环境通常还会配置 STATIC_ROOT，用 collectstatic 收集静态文件。
 STATIC_URL = 'static/'
+
+AUTH_USER_MODEL = 'users.User'

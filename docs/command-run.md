@@ -63,3 +63,5 @@ uv 可以动态获取并使用特定的 Python 版本，而不需要你在系统
 
 
 查看当前 uv 环境信息： ```bash uv info ```
+
+创建管理员账号的具体步骤: ```bash uv run manage.py createsuperuser ```
