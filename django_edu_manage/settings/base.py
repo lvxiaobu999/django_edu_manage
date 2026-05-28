@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     'apps.users.apps.UsersConfig',
     'apps.classes.apps.ClassesConfig',
     'apps.user_profile.apps.UserProfileConfig',
+    'apps.research_group.apps.ResearchGroupConfig',
 ]
 
 
@@ -166,7 +167,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': BASE_DIR / 'db_v2.sqlite3',
         }
     }
 
