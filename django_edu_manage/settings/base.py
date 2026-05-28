@@ -89,6 +89,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_app.apps.DjangoAppConfig',
+    'apps.users.apps.UsersConfig',
+    'apps.classes.apps.ClassesConfig',
+    'apps.user_profile.apps.UserProfileConfig',
 ]
 
 
@@ -223,5 +226,7 @@ USE_TZ = True
 # 当前值 static/ 表示静态资源路径类似 /static/app.css。
 # 生产环境通常还会配置 STATIC_ROOT，用 collectstatic 收集静态文件。
 STATIC_URL = 'static/'
+
+AUTH_USER_MODEL = 'users.User'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
