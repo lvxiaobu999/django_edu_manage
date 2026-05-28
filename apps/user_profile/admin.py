@@ -7,6 +7,9 @@ from apps.user_profile.models import ResearchGroup, StudentProfile, TeacherProfi
 class TeacherProfileAdmin(admin.ModelAdmin):
     list_display = ['emp_no', 'realname', 'phone', 'email']
     search_fields = ['emp_no', 'realname', 'phone']
+
+    # filter_horizontal：多对多字段的 UI 控件，提供左右两个选择框，
+    # 比默认的多选下拉框更适合选项较多的场景
     filter_horizontal = ['research_groups', 'class_ids']
 
 
