@@ -5,7 +5,7 @@ from apps.user_profile.models import StudentProfile, TeacherProfile
 
 @admin.register(TeacherProfile)
 class TeacherProfileAdmin(admin.ModelAdmin):
-    list_display = ['emp_no', 'realname', 'gender', 'age', 'phone', 'email']
+    list_display = ['emp_no', 'realname', 'gender', 'age', 'phone', 'email', 'address']
     search_fields = ['emp_no', 'realname', 'phone']
     list_filter = ['gender']
     # filter_horizontal：M2M 字段的双栏选择控件，比默认多选下拉框好用
@@ -14,6 +14,6 @@ class TeacherProfileAdmin(admin.ModelAdmin):
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
-    list_display = ['stu_no', 'realname', 'gender', 'age', 'phone', 'email', 'class_id']
+    list_display = ['stu_no', 'realname', 'gender', 'age', 'phone', 'email', 'address', 'class_id']
     search_fields = ['stu_no', 'realname', 'phone']
     list_filter = ['gender']
