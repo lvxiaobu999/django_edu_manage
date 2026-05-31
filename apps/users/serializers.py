@@ -56,6 +56,14 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['is_approved', 'is_active', 'date_joined']
 
 
+# === 登录序列化器 ===
+# 登录不需要 ModelSerializer，因为不需要创建/更新数据库记录，
+# 只校验用户名密码是否匹配
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(min_length=6, write_only=True)
+
+
 # === 审核序列化器 ===
 # 不需要传入任何字段，只是触发审核动作，所以用空 Serializer 即可
 class ApproveSerializer(serializers.Serializer):

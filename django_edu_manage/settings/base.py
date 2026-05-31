@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',  # django-cors-headers：处理浏览器跨域请求
     'django_app.apps.DjangoAppConfig',
     'apps.users.apps.UsersConfig',
     'apps.classes.apps.ClassesConfig',
@@ -100,6 +101,7 @@ INSTALLED_APPS = [
 # 顺序很重要，通常不要随意调整 Django 默认中间件顺序。
 # SecurityMiddleware：提供基础安全响应头和 HTTPS 相关能力。
 # SessionMiddleware：启用 request.session。
+# CorsMiddleware：处理 CORS 跨域请求头，需在 CommonMiddleware 之前，且尽量靠前。
 # CommonMiddleware：处理 APPEND_SLASH 等通用行为。
 # CsrfViewMiddleware：提供 CSRF 防护。
 # AuthenticationMiddleware：把当前用户挂到 request.user。
@@ -108,6 +110,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # 跨域中间件：对每个响应注入 Access-Control-Allow-* 头
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -119,6 +122,11 @@ MIDDLEWARE = [
 # ROOT_URLCONF 指定根路由模块。
 # Django 会从 django_edu_manage/urls.py 里读取 urlpatterns。
 ROOT_URLCONF = 'django_edu_manage.urls'
+
+# APPEND_SLASH：Django 默认会在 URL 末尾自动补斜杠，对不带斜杠的 GET 请求做 301 重定向。
+# 但 REST API 场景下，POST/PUT 等请求被重定向时会丢失请求体数据导致 500 错误。
+# 关闭此项后，带斜杠和不带斜杠的 URL 被视为不同的路径，由路由精确匹配。
+APPEND_SLASH = False
 
 
 # TEMPLATES 配置模板系统。
@@ -231,3 +239,37 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'users.User'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ========================== CORS 跨域配置 ==========================
+# 浏览器出于安全考虑，默认禁止网页向不同源（协议/域名/端口）发起 AJAX 请求。
+# django-cors-headers 通过注入 Access-Control-Allow-* 响应头来告诉浏览器：
+# "这个来源的请求是安全的，可以放行"。
+#
+# 核心概念：
+#   Origin（源）= 协议 + 域名 + 端口，三者任一不同即为"跨域"。
+#   比如 http://localhost:5173 → http://localhost:8000 就是跨域。
+#
+# 以下为公共默认值，各环境可在 development.py / production.py 中覆盖。
+
+# CORS_ALLOWED_ORIGINS：白名单模式，只允许列表中列出的源。
+# 安全但不够灵活，适合生产环境按需列出前端地址。
+# 示例：CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'https://edu.example.com']
+CORS_ALLOWED_ORIGINS = []
+
+# CORS_ALLOW_CREDENTIALS：是否允许跨域请求携带 Cookie 和 Authorization 头。
+# 本项目使用 Session 认证，前端需要发送 Cookie 维持登录态，因此必须为 True。
+# 注意：设为 True 后，CORS_ALLOWED_ORIGINS 不能与 CORS_ALLOW_ALL_ORIGINS 同时使用，
+# 必须用白名单列出确切的前端地址（不能用 *）。
+CORS_ALLOW_CREDENTIALS = True
+
+# CORS_ALLOW_METHODS：允许的 HTTP 方法，不指定时默认包含 GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS，
+# 一般无需自定义。
+# CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+
+# CORS_ALLOW_HEADERS：允许的非标准请求头。默认已经包含 Content-Type、Authorization 等常用头。
+# 如果有自定义头（如 X-Requested-With），可在此扩展。
+# CORS_ALLOW_HEADERS = ['content-type', 'authorization', 'x-requested-with']
+
+# CORS_URLS_REGEX：限定只对匹配正则的 URL 做 CORS 处理，不设置则对所有 URL 生效。
+# CORS_URLS_REGEX = r'^/api/.*$'

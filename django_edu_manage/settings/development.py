@@ -18,3 +18,21 @@ DEBUG = env.bool('DEBUG', default=True)
 # example.com：正式域名，通常在生产环境配置。
 # *：允许所有主机，开发调试可临时用，生产环境不建议使用。
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+
+
+# ========================== 开发环境 CORS 配置 ==========================
+# 开发阶段前端通常运行在 localhost:5173（Vite）或 localhost:3000（CRA）等端口，
+# 与 Django 的 localhost:8000 不同端口，属于跨域访问。
+#
+# 这里用白名单列出常见前端开发服务器的地址，比直接用 CORS_ALLOW_ALL_ORIGINS 安全，
+# 同时能在开发阶段正常携带 Cookie 做 Session 认证。
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',   # Vite 默认端口
+    'http://localhost:3000',   # CRA / Next.js 默认端口
+    'http://localhost:8080',   # Vue CLI 默认端口
+    'http://localhost:3334',   # Vue CLI 默认端口
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:3334',
+]

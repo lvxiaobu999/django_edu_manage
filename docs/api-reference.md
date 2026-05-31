@@ -63,9 +63,77 @@ POST /api/register/
 
 ---
 
-## 2. 用户管理（管理员）
+## 2. 登录/登出
 
-### 2.1 用户列表
+### 2.1 登录
+
+```
+POST /api/login/
+```
+
+无需认证。登录成功后建立 Session，浏览器自动保存 `sessionid` Cookie，后续请求自动携带该 Cookie 维持认证状态。
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| username | string | 是 | 用户名 |
+| password | string | 是 | 密码，最少6位 |
+
+### 请求示例
+
+```json
+{
+  "username": "zhangsan",
+  "password": "123456"
+}
+```
+
+### 成功响应 `200 OK`
+
+```json
+{
+  "id": 1,
+  "username": "zhangsan",
+  "email": "zhangsan@example.com",
+  "phone": "",
+  "role": "STUDENT",
+  "role_display": "学生",
+  "real_name": "",
+  "is_approved": false,
+  "is_active": false,
+  "date_joined": "2026-05-26T10:00:00Z"
+}
+```
+
+### 错误响应
+
+| 状态码 | 说明 |
+|--------|------|
+| 401 | 用户名或密码错误 |
+| 403 | 账户未激活，请等待管理员审核 |
+
+### 2.2 登出
+
+```
+POST /api/logout/
+```
+
+需要登录。清除服务端 Session，浏览器 `sessionid` Cookie 随之失效。
+
+### 成功响应 `200 OK`
+
+```json
+{
+  "detail": "已退出登录"
+}
+```
+
+---
+
+## 3. 用户管理（管理员）
+
+### 3.1 用户列表
 
 ```
 GET /api/
@@ -73,13 +141,13 @@ GET /api/
 
 需要已审核通过的管理员。
 
-### 2.2 用户详情
+### 3.2 用户详情
 
 ```
 GET /api/{id}/
 ```
 
-### 2.3 待审核用户列表
+### 3.3 待审核用户列表
 
 ```
 GET /api/pending/
@@ -106,7 +174,7 @@ GET /api/pending/
 ]
 ```
 
-### 2.4 审核通过
+### 3.4 审核通过
 
 ```
 POST /api/{id}/approve/
@@ -135,9 +203,9 @@ POST /api/{id}/approve/
 
 ---
 
-## 3. 班级管理
+## 4. 班级管理
 
-### 3.1 班级列表
+### 4.1 班级列表
 
 ```
 GET /api/classes/
@@ -145,13 +213,13 @@ GET /api/classes/
 
 需要登录。
 
-### 3.2 班级详情
+### 4.2 班级详情
 
 ```
 GET /api/classes/{id}/
 ```
 
-### 3.3 创建班级
+### 4.3 创建班级
 
 ```
 POST /api/classes/
@@ -166,13 +234,13 @@ POST /api/classes/
 }
 ```
 
-### 3.4 更新班级
+### 4.4 更新班级
 
 ```
 PUT /api/classes/{id}/
 ```
 
-### 3.5 删除班级
+### 4.5 删除班级
 
 ```
 DELETE /api/classes/{id}/
@@ -191,9 +259,9 @@ DELETE /api/classes/{id}/
 
 ---
 
-## 4. 老师简介
+## 5. 老师简介
 
-### 4.1 完善 / 查看老师简介
+### 5.1 完善 / 查看老师简介
 
 ```
 POST /api/profile/teacher/
@@ -248,9 +316,9 @@ GET  /api/profile/teacher/
 
 ---
 
-## 5. 学生简介
+## 6. 学生简介
 
-### 5.1 完善 / 查看学生简介
+### 6.1 完善 / 查看学生简介
 
 ```
 POST /api/profile/student/
@@ -300,7 +368,7 @@ GET  /api/profile/student/
 
 ---
 
-## 6. 教研组管理
+## 7. 教研组管理
 
 ```
 GET    /api/profile/research-groups/
@@ -331,5 +399,7 @@ DELETE /api/profile/research-groups/{id}/
 3. 管理员 GET  /api/pending/      → 查看待审核列表
 4. 管理员 POST /api/{id}/approve/ → 审核通过，账户激活
 
-5. 用户可正常登录
+5. POST /api/login/               → 登录，获取 sessionid Cookie
+6. 携带 Cookie 访问其他 API       → 正常使用需要登录的接口
+7. POST /api/logout/              → 登出，退出登录
 ```

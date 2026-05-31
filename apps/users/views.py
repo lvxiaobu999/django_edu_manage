@@ -1,17 +1,71 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.users.models import RoleChoices
 from apps.users.permissions import IsApprovedAdmin
-from apps.users.serializers import RegisterSerializer, UserSerializer
+from apps.users.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 
 # get_user_model() 返回当前生效的 User 模型（即 settings.AUTH_USER_MODEL 指向的模型）。
 # 不要直接 from apps.users.models import User，保持解耦。
 User = get_user_model()
+
+
+# === 登录视图 ===
+# APIView：DRF 最基础的视图类，适合非 CRUD 的自定义逻辑。
+# 这里用 APIView 而非 GenericAPIView，因为登录不涉及查询集和序列化器自动处理，
+# 需要完全手写 post() 流程：校验凭据 → 登录成功建立 session → 返回用户信息。
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    # authentication_classes 置空：确保未登录用户也能访问登录接口，
+    # 否则未登录时可能先被认证中间件拦截返回 401
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+
+        # Django 内置函数 authenticate()：验证用户名密码是否匹配（密码自动对比哈希）
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return Response(
+                {'detail': '用户名或密码错误'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # is_active 检查：未激活（注册后未审核）不能登录
+        if not user.is_active:
+            return Response(
+                {'detail': '账户未激活，请等待管理员审核'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # login() 将 user_id 写入 session（加密存储于 django_session 表中），
+        # 并生成 session cookie（Set-Cookie: sessionid=xxx），后续请求浏览器自动携带。
+        login(request, user)
+
+        return Response(self.get_serializer(user).data)
+
+    # 复用用户展示序列化器，返回完整用户信息，前端可用于显示当前用户身份
+    def get_serializer(self, user):
+        return UserSerializer(user)
+
+
+# === 登出视图 ===
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # logout() 清除 session 数据并删除对应的 django_session 记录
+        logout(request)
+        return Response({'detail': '已退出登录'})
 
 
 # === 注册视图 ===
