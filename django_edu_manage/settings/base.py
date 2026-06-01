@@ -116,6 +116,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_edu_manage.middleware.RequestIdMiddleware',
 ]
 
 
@@ -273,3 +274,15 @@ CORS_ALLOW_CREDENTIALS = True
 
 # CORS_URLS_REGEX：限定只对匹配正则的 URL 做 CORS 处理，不设置则对所有 URL 生效。
 # CORS_URLS_REGEX = r'^/api/.*$'
+
+
+# ========================== REST Framework 配置 ==========================
+REST_FRAMEWORK = {
+    # 自定义 JSON 渲染器：自动将 DRF 视图返回值包裹为统一响应格式
+    'DEFAULT_RENDERER_CLASSES': [
+        'django_edu_manage.common.renderer.UnifiedJSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    # 自定义异常处理：将 DRF 异常转为统一响应格式
+    'EXCEPTION_HANDLER': 'django_edu_manage.common.exceptions.unified_exception_handler',
+}

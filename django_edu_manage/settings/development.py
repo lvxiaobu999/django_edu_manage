@@ -30,9 +30,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',   # Vite 默认端口
     'http://localhost:3000',   # CRA / Next.js 默认端口
     'http://localhost:8080',   # Vue CLI 默认端口
-    'http://localhost:3334',   # Vue CLI 默认端口
+    'http://localhost:3333',   # Vue CLI 默认端口
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:8080',
-    'http://127.0.0.1:3334',
+    'http://127.0.0.1:3333',
 ]
