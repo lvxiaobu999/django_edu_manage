@@ -286,3 +286,21 @@ REST_FRAMEWORK = {
     # 自定义异常处理：将 DRF 异常转为统一响应格式
     'EXCEPTION_HANDLER': 'django_edu_manage.common.exceptions.unified_exception_handler',
 }
+
+
+# ========================== 日志配置 ==========================
+# 日志配置由 logging_config.get_logging_config() 动态生成，根据环境变量控制：
+#   LOG_LEVEL：日志级别（DEBUG/INFO/WARNING/ERROR）
+#   LOG_DIR：  日志文件输出目录，默认 BASE_DIR/logs/
+#
+# 日志文件：
+#   logs/app-{date}-{level}.log  按天分割，文件名含日期和级别
+#                                 app-{date}-{LOG_LEVEL}.log: 全量日志
+#                                 app-{date}-ERROR.log:       错误日志
+#   超过 LOG_BACKUP 天的旧文件自动清理，默认保留 30 天
+#
+# 日志格式（verbose）便于 grep 和日志平台检索：
+#   2025-06-01 12:00:00 [INFO] [apps.users.views] [req:abc-123] 用户登录成功
+from django_edu_manage.settings.logging_config import get_logging_config
+
+LOGGING = get_logging_config(BASE_DIR)
