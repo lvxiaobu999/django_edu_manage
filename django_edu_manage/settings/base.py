@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -88,6 +89,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',             # JWT 认证（登录、刷新 token）
+    'rest_framework_simplejwt.token_blacklist',  # JWT 黑名单（登出时作废 refresh token）
     'corsheaders',  # django-cors-headers：处理浏览器跨域请求
     'django_app.apps.DjangoAppConfig',
     'apps.users.apps.UsersConfig',
@@ -259,7 +262,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = []
 
 # CORS_ALLOW_CREDENTIALS：是否允许跨域请求携带 Cookie 和 Authorization 头。
-# 本项目使用 Session 认证，前端需要发送 Cookie 维持登录态，因此必须为 True。
+# 本项目使用 JWT 认证，前端通过 Authorization: Bearer <token> 头发送令牌，
+# 不依赖 Cookie。但保留 True 以支持 Django Admin 的 Session 认证。
 # 注意：设为 True 后，CORS_ALLOWED_ORIGINS 不能与 CORS_ALLOW_ALL_ORIGINS 同时使用，
 # 必须用白名单列出确切的前端地址（不能用 *）。
 CORS_ALLOW_CREDENTIALS = True
@@ -278,6 +282,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 # ========================== REST Framework 配置 ==========================
 REST_FRAMEWORK = {
+    # 默认认证方式：优先 JWT，回退 Session（供 Django Admin 使用）
+    # JWT 认证流程：前端在请求头里传 Authorization: Bearer <access_token>，
+    # JWTAuthentication 解析 token → 查出用户 → 挂到 request.user
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
     # 自定义 JSON 渲染器：自动将 DRF 视图返回值包裹为统一响应格式
     'DEFAULT_RENDERER_CLASSES': [
         'django_edu_manage.common.renderer.UnifiedJSONRenderer',
@@ -285,6 +296,34 @@ REST_FRAMEWORK = {
     ],
     # 自定义异常处理：将 DRF 异常转为统一响应格式
     'EXCEPTION_HANDLER': 'django_edu_manage.common.exceptions.unified_exception_handler',
+}
+
+
+# ========================== JWT 认证配置 ==========================
+# access token：短期有效（默认 30 分钟），用于访问受保护 API
+# refresh token：长期有效（默认 7 天），用于在 access token 过期后获取新的
+#
+# 安全设计：
+#   ROTATE_REFRESH_TOKENS=True  → 刷新 access token 时同时发放新的 refresh token
+#   BLACKLIST_AFTER_ROTATION=True → 旧的 refresh token 加入黑名单，防止重复使用
+#
+# 环境变量可覆盖：
+#   JWT_ACCESS_TOKEN_LIFETIME_MINUTES  access token 有效期（分钟）
+#   JWT_REFRESH_TOKEN_LIFETIME_DAYS    refresh token 有效期（天）
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(
+        minutes=int(os.environ.get('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', '30'))
+    ),
+    'REFRESH_TOKEN_LIFETIME': timedelta(
+        days=int(os.environ.get('JWT_REFRESH_TOKEN_LIFETIME_DAYS', '7'))
+    ),
+    # 刷新 access 时同时刷新 refresh token，旧 refresh token 加入黑名单
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    # 前端请求头：Authorization: Bearer <token>
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    # JWT 签名密钥，默认使用 Django 的 SECRET_KEY
+    'SIGNING_KEY': os.environ.get('JWT_SIGNING_KEY', SECRET_KEY),
 }
 
 

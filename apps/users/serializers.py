@@ -64,6 +64,12 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, write_only=True)
 
 
+# === 登出序列化器 ===
+# JWT 登出需要前端传入 refresh token，服务端将其加入黑名单使其失效
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(help_text='refresh token，登出后将被加入黑名单')
+
+
 # === 审核序列化器 ===
 # 不需要传入任何字段，只是触发审核动作，所以用空 Serializer 即可
 class ApproveSerializer(serializers.Serializer):

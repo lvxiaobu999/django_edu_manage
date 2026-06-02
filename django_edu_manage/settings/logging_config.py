@@ -124,6 +124,22 @@ def get_logging_config(BASE_DIR):
                 'propagate': False,
             },
 
+            # django.db.backends: 数据库后端日志，每条 SQL 语句都会输出
+            # 设 WARNING 抑制 SQL 查询噪音，需要调试 SQL 时临时改为 DEBUG
+            'django.db.backends': {
+                'handlers': ['console', 'file'],
+                'level': 'WARNING',
+                'propagate': False,
+            },
+
+            # django.utils.autoreload: 开发服务器自动重载日志
+            # 设 INFO 抑制 "Watching dir..." 和 "File ... first seen..." 等 DEBUG 噪音
+            'django.utils.autoreload': {
+                'handlers': ['console', 'file'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+
             # django.request: HTTP 请求处理日志
             # Django 在处理请求时，遇到 4xx/5xx 会自动调用 logger.warning() / logger.error()
             # 所以这个 logger 接入 error_file，确保请求异常能被独立记录

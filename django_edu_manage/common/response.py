@@ -34,8 +34,11 @@ class ApiResponse(Response):
                 'timestamp': datetime.now(timezone.utc).isoformat(),
             },
         }
+        # 默认始终返回 HTTP 200，业务成功/失败由 body 中的 success 和 code 字段区分。
+        # 前端约定：HTTP 401 仅用于 token 过期 → 重定向登录页，其余场景走 body.code 判断。
+        # 需要非 200 状态码时（如 401 表示 token 失效），调用方显式传入 status_code。
         if status_code is None:
-            status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
+            status_code = status.HTTP_200_OK
         super().__init__(data=body, status=status_code, **kwargs)
 
 
