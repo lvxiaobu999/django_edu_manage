@@ -50,40 +50,40 @@ Authorization: Bearer <access_token>
 
 ```
 认证模块 (apps/auth)
-├── POST /api/login/             登录
-├── POST /api/logout/            登出
-├── POST /api/login/refresh/     刷新 token
-└── POST /api/register/          注册
+├── POST /api/login             登录
+├── POST /api/logout            登出
+├── POST /api/login/refresh     刷新 token
+└── POST /api/register          注册
 
 用户管理 (apps/users)
-├── GET    /api/users/            用户列表（分页）
-├── POST   /api/users/            创建用户
-├── GET    /api/users/{id}/       用户详情
-├── PUT    /api/users/{id}/       更新用户
-├── DELETE /api/users/{id}/       删除用户
-├── POST   /api/users/{id}/approve/  审核通过
-└── GET    /api/pending/          待审核用户列表
+├── GET    /api/users            用户列表（分页）
+├── POST   /api/users            创建用户
+├── GET    /api/users/{id}       用户详情
+├── PUT    /api/users/{id}       更新用户
+├── DELETE /api/users/{id}       删除用户
+├── POST   /api/users/{id}/approve  审核通过
+└── GET    /api/users/pending    待审核用户列表
 
 班级管理 (apps/classes)
-├── GET    /api/classes/          班级列表
-├── POST   /api/classes/          创建班级
-├── GET    /api/classes/{id}/     班级详情
-├── PUT    /api/classes/{id}/     更新班级
-└── DELETE /api/classes/{id}/     删除班级
+├── GET    /api/classes          班级列表
+├── POST   /api/classes          创建班级
+├── GET    /api/classes/{id}     班级详情
+├── PUT    /api/classes/{id}     更新班级
+└── DELETE /api/classes/{id}     删除班级
 
 师生简介 (apps/user_profile)
-├── POST/GET/PUT  /api/profile/teacher/  教师简介
-└── POST/GET/PUT  /api/profile/student/  学生简介
+├── POST/GET/PUT  /api/profile/teacher  教师简介
+└── POST/GET/PUT  /api/profile/student  学生简介
 
 教研组 (apps/research_group)
-├── GET    /api/research-groups/          教研组列表
-├── POST   /api/research-groups/          创建教研组
-├── GET    /api/research-groups/{id}/     教研组详情
-├── PUT    /api/research-groups/{id}/     更新教研组
-└── DELETE /api/research-groups/{id}/     删除教研组
+├── GET    /api/research-groups          教研组列表
+├── POST   /api/research-groups          创建教研组
+├── GET    /api/research-groups/{id}     教研组详情
+├── PUT    /api/research-groups/{id}     更新教研组
+└── DELETE /api/research-groups/{id}     删除教研组
 
 仪表盘 (apps/dashboard)
-└── GET    /api/dashboard/stats/          统计数据（支持 ?grade= 参数）
+└── GET    /api/dashboard/stats          统计数据（支持 ?grade= 参数）
 ```
 
 ---
@@ -98,7 +98,7 @@ Authorization: Bearer <access_token>
 
 所有接口需要 `IsAuthenticated` + `IsApprovedAdmin` 权限。
 
-### 用户列表 `GET /api/users/`
+### 用户列表 `GET /api/users`
 
 查询参数：
 
@@ -113,7 +113,7 @@ Authorization: Bearer <access_token>
 {
     "data": {
         "count": 150,
-        "next": "/api/users/?page=2",
+        "next": "/api/users?page=2",
         "previous": null,
         "results": [
             {
@@ -133,7 +133,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 审核通过 `POST /api/users/{id}/approve/`
+### 审核通过 `POST /api/users/{id}/approve`
 
 无需请求体。成功后用户 `is_approved=True`、`is_active=True`。
 
@@ -143,7 +143,7 @@ Authorization: Bearer <access_token>
 |------|------|---------|
 | 已审核通过 | 400 | 该用户已审核通过 |
 
-### 待审核列表 `GET /api/pending/`
+### 待审核列表 `GET /api/users/pending`
 
 返回 `is_approved=False` 的所有用户（不分页）。
 
@@ -176,7 +176,7 @@ Authorization: Bearer <access_token>
 
 ## 师生简介
 
-### 教师简介 `POST/GET/PUT /api/profile/teacher/`
+### 教师简介 `POST/GET/PUT /api/profile/teacher`
 
 权限：`IsAuthenticated` + `IsRole('TEACHER')`
 

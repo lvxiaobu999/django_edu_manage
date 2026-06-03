@@ -1,11 +1,10 @@
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 
 from apps.classes.views import ClassesViewSet
+from apps.core.routers import NoSlashRouter
 
-# DefaultRouter 自动为 ClassesViewSet 生成 RESTful 路由
-router = DefaultRouter()
-router.register('', ClassesViewSet)
+router = NoSlashRouter()
+router.register('classes', ClassesViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
