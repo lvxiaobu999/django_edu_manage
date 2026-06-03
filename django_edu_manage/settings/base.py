@@ -92,7 +92,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',             # JWT 认证（登录、刷新 token）
     'rest_framework_simplejwt.token_blacklist',  # JWT 黑名单（登出时作废 refresh token）
     'corsheaders',  # django-cors-headers：处理浏览器跨域请求
-    'django_app.apps.DjangoAppConfig',
+    'apps.core.apps.CoreConfig',
+    'apps.auth.apps.AuthConfig',
     'apps.users.apps.UsersConfig',
     'apps.classes.apps.ClassesConfig',
     'apps.user_profile.apps.UserProfileConfig',

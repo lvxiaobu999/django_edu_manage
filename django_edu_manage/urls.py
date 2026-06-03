@@ -1,28 +1,46 @@
 """
 根 URL 路由配置。
 
-include() 的作用是将其他 urls.py 的子路由挂载到指定前缀下：
+认证端点（apps.auth）：
+  path('api/', include('apps.auth.urls'))
+    → POST /api/login/          → LoginView
+    → POST /api/logout/         → LogoutView
+    → POST /api/login/refresh/  → TokenRefreshView
+    → POST /api/register/       → RegisterView
+
+用户管理（apps.users）：
   path('api/', include('apps.users.urls'))
-    → /api/register/    → RegisterView
-    → /api/pending/     → PendingUserListView
-    → /api/             → UserViewSet (list/create)
-    → /api/{id}/        → UserViewSet (retrieve/update/destroy)
-    → /api/{id}/approve/→ UserViewSet.approve()
+    → GET    /api/users/            → UserViewSet.list()
+    → POST   /api/users/            → UserViewSet.create()
+    → GET    /api/users/{id}/       → UserViewSet.retrieve()
+    → PUT    /api/users/{id}/       → UserViewSet.update()
+    → DELETE /api/users/{id}/       → UserViewSet.destroy()
+    → POST   /api/users/{id}/approve/ → UserViewSet.approve()
+    → GET    /api/users/pending     → PendingUserListView
 
+班级管理：
   path('api/classes/', include('apps.classes.urls'))
-    → /api/classes/         → ClassesViewSet (list/create)
-    → /api/classes/{id}/    → ClassesViewSet (retrieve/update/destroy)
+    → CRUD /api/classes/
 
+师生简介：
   path('api/profile/', include('apps.user_profile.urls'))
-    → /api/profile/teacher/          → TeacherProfileView
-    → /api/profile/student/          → StudentProfileView
-    → /api/profile/research-groups/  → ResearchGroupViewSet
+    → /api/profile/teacher/  → TeacherProfileView
+    → /api/profile/student/  → StudentProfileView
+
+教研组：
+  path('api/research-groups/', include('apps.research_group.urls'))
+    → CRUD /api/research-groups/
+
+仪表盘：
+  path('api/dashboard/', include('apps.dashboard.urls'))
+    → GET /api/dashboard/stats/
 """
 from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('apps.auth.urls')),
     path('api/', include('apps.users.urls')),
     path('api/classes/', include('apps.classes.urls')),
     path('api/profile/', include('apps.user_profile.urls')),

@@ -7,7 +7,7 @@
 当前项目已经具备：
 
 - Django 基础项目结构
-- 一个本地应用：`django_app`
+- 用户认证、班级管理、师生简介、教研组、仪表盘五大业务模块
 - PostgreSQL 的 Docker Compose 配置
 - 基于 `django-environ` 的环境变量配置
 - 拆分后的 settings 模块
@@ -42,9 +42,17 @@
 - `django_edu_manage/wsgi.py`
   - WSGI 入口
 
-- `django_app/`
-  - 当前主应用
-  - 目前还没有实际业务模型和视图
+- `templates/`
+  - Django 模板目录
+
+- `apps/`
+  - 所有业务模块
+  - `core/`：全局基础设施
+  - `users/`：用户认证管理
+  - `user_profile/`：师生档案
+  - `classes/`：班级管理
+  - `research_group/`：教研组
+  - `dashboard/`：统计仪表盘
 
 - `docs/`
   - 项目开发文档

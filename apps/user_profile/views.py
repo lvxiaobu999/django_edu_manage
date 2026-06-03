@@ -7,7 +7,7 @@ from apps.user_profile.serializers import (
     StudentProfileSerializer,
     TeacherProfileSerializer,
 )
-from apps.users.permissions import IsRole
+from apps.core.permissions import IsRole
 
 
 # === 老师简介视图 ===
