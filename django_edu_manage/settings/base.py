@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     'apps.classes.apps.ClassesConfig',
     'apps.user_profile.apps.UserProfileConfig',
     'apps.research_group.apps.ResearchGroupConfig',
+    'apps.dashboard.apps.DashboardConfig',
 ]
 
 

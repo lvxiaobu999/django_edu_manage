@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/classes/', include('apps.classes.urls')),
     path('api/profile/', include('apps.user_profile.urls')),
     path('api/research-groups/', include('apps.research_group.urls')),
+    path('api/dashboard/', include('apps.dashboard.urls')),
 ]
