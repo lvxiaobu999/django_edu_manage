@@ -12,7 +12,7 @@
 |------|-----|------|---------|
 | POST | `/api/login` | 登录，返回 access + refresh token | 否 |
 | POST | `/api/logout` | 登出，将 refresh token 加入黑名单 | 是 |
-| POST | `/api/login/refresh` | 刷新 access token | 否 |
+| POST | `/api/token_refresh` | 刷新 access token | 否 |
 | POST | `/api/register` | 注册新用户 | 否 |
 
 ---
@@ -87,7 +87,7 @@
 
 > **注意：** refresh token 加入黑名单后无法再用于刷新。access token 无法主动失效，需等待自然过期（默认 30 分钟）。
 
-### 3. 刷新 Token `POST /api/login/refresh`
+### 3. 刷新 Token `POST /api/token_refresh`
 
 access token 过期后，前端收到 HTTP 401，自动调用此接口换新 token。
 
@@ -215,7 +215,7 @@ axios.interceptors.response.use(
     async error => {
         if (error.response?.status === 401) {
             const refresh = localStorage.getItem('refresh_token')
-            const { data } = await axios.post('/api/login/refresh', { refresh })
+            const { data } = await axios.post('/api/token_refresh', { refresh })
             localStorage.setItem('access_token', data.data.access)
             localStorage.setItem('refresh_token', data.data.refresh)
             // 重试原请求

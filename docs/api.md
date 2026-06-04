@@ -52,7 +52,7 @@ Authorization: Bearer <access_token>
 认证模块 (apps/auth)
 ├── POST /api/login             登录
 ├── POST /api/logout            登出
-├── POST /api/login/refresh     刷新 token
+├── POST /api/token_refresh     刷新 token
 └── POST /api/register          注册
 
 用户管理 (apps/users)

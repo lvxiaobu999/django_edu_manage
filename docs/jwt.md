@@ -33,7 +33,7 @@
 
 3. access token 过期后刷新
    前端                           后端
-   POST /api/login/refresh/ ────→ RefreshToken(refresh)
+   POST /api/token_refresh/ ────→ RefreshToken(refresh)
    { refresh }                   ↓
                                  旧 refresh → 黑名单
    ←──────────── { access, refresh }   新 access + refresh
@@ -88,7 +88,7 @@
 }
 ```
 
-### POST /api/login/refresh/ — 刷新 token
+### POST /api/token_refresh/ — 刷新 token
 
 请求：
 ```json
@@ -165,7 +165,7 @@ axios.interceptors.response.use(
       const refresh = localStorage.getItem('refresh_token')
       if (refresh) {
         try {
-          const res = await axios.post('/api/login/refresh/', { refresh })
+          const res = await axios.post('/api/token_refresh/', { refresh })
           const { access, refresh: newRefresh } = res.data
           localStorage.setItem('access_token', access)
           localStorage.setItem('refresh_token', newRefresh)
@@ -240,5 +240,5 @@ access token 解码后的 payload：
 | `settings/base.py` | 添加 INSTALLED_APPS、REST_FRAMEWORK 认证类、SIMPLE_JWT 配置 |
 | `apps/users/views.py` | LoginView 改 JWT、LogoutView 改黑名单、新增 TokenRefreshView |
 | `apps/users/serializers.py` | 新增 LogoutSerializer |
-| `apps/users/urls.py` | 新增 `/api/login/refresh/` 路由 |
+| `apps/users/urls.py` | 新增 `/api/token_refresh/` 路由 |
 | `.env` | 新增 JWT 环境变量 |
