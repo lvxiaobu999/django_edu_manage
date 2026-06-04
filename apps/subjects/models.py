@@ -1,8 +1,6 @@
-from django.db import models
-
-# Create your models here.
-# 科目模型
-# 与 TeacherProfile 通过 M2M 关联（TeacherProfile.research_groups）。
+# 科目字典表。
+# 科目是成绩记录（Score）的基础数据源之一，通过 FK 被引用。
+# 使用 PROTECT 外键策略，确保有成绩引用的科目不会被误删。
 
 from django.db import models
 

@@ -39,6 +39,38 @@
     → PUT    /api/research-groups/{id}  → ResearchGroupViewSet.update()
     → DELETE /api/research-groups/{id}  → ResearchGroupViewSet.destroy()
 
+科目管理：
+  path('api/', include('apps.subjects.urls'))
+    → GET    /api/subjects          → SubjectsViewSet.list()
+    → POST   /api/subjects          → SubjectsViewSet.create()
+    → GET    /api/subjects/{id}     → SubjectsViewSet.retrieve()
+    → PUT    /api/subjects/{id}     → SubjectsViewSet.update()
+    → DELETE /api/subjects/{id}     → SubjectsViewSet.destroy()
+
+学期管理：
+  path('api/', include('apps.semester_dict.urls'))
+    → GET    /api/semesters        → SemesterViewSet.list()
+    → POST   /api/semesters        → SemesterViewSet.create()
+    → GET    /api/semesters/{id}   → SemesterViewSet.retrieve()
+    → PUT    /api/semesters/{id}   → SemesterViewSet.update()
+    → DELETE /api/semesters/{id}   → SemesterViewSet.destroy()
+
+考试管理：
+  path('api/', include('apps.exam.urls'))
+    → GET    /api/exams            → ExamPlanViewSet.list()
+    → POST   /api/exams            → ExamPlanViewSet.create()
+    → GET    /api/exams/{id}       → ExamPlanViewSet.retrieve()
+    → PUT    /api/exams/{id}       → ExamPlanViewSet.update()
+    → DELETE /api/exams/{id}       → ExamPlanViewSet.destroy()
+
+成绩管理：
+  path('api/', include('apps.score.urls'))
+    → GET    /api/scores           → ScoreViewSet.list()
+    → POST   /api/scores           → ScoreViewSet.create()
+    → GET    /api/scores/{id}      → ScoreViewSet.retrieve()
+    → PUT    /api/scores/{id}      → ScoreViewSet.update()
+    → DELETE /api/scores/{id}      → ScoreViewSet.destroy()
+
 仪表盘：
   path('api/dashboard/', include('apps.dashboard.urls'))
     → GET /api/dashboard/stats
@@ -53,5 +85,9 @@ urlpatterns = [
     path('api/', include('apps.classes.urls')),
     path('api/profile/', include('apps.user_profile.urls')),
     path('api/', include('apps.research_group.urls')),
+    path('api/', include('apps.subjects.urls')),
+    path('api/', include('apps.semester_dict.urls')),
+    path('api/', include('apps.exam.urls')),
+    path('api/', include('apps.score.urls')),
     path('api/dashboard/', include('apps.dashboard.urls')),
 ]

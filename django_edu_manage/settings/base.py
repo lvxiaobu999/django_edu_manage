@@ -99,6 +99,9 @@ INSTALLED_APPS = [
     'apps.user_profile.apps.UserProfileConfig',
     'apps.research_group.apps.ResearchGroupConfig',
     'apps.subjects.apps.SubjectsConfig',
+    'apps.semester_dict.apps.SemesterDictConfig',
+    'apps.exam.apps.ExamConfig',
+    'apps.score.apps.ScoreConfig',
     'apps.dashboard.apps.DashboardConfig',
 ]
 

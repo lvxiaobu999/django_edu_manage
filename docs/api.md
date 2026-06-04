@@ -75,12 +75,35 @@ Authorization: Bearer <access_token>
 ├── POST/GET/PUT  /api/profile/teacher  教师简介
 └── POST/GET/PUT  /api/profile/student  学生简介
 
-教研组 (apps/research_group)
-├── GET    /api/research-groups          教研组列表
-├── POST   /api/research-groups          创建教研组
-├── GET    /api/research-groups/{id}     教研组详情
-├── PUT    /api/research-groups/{id}     更新教研组
-└── DELETE /api/research-groups/{id}     删除教研组
+教研组 (apps/research_group)（待补充）
+
+科目管理 (apps/subjects)
+├── GET    /api/subjects          科目列表
+├── POST   /api/subjects          创建科目
+├── GET    /api/subjects/{id}     科目详情
+├── PUT    /api/subjects/{id}     更新科目
+└── DELETE /api/subjects/{id}     删除科目
+
+学期管理 (apps/semester_dict)
+├── GET    /api/semesters         学期列表
+├── POST   /api/semesters         创建学期
+├── GET    /api/semesters/{id}    学期详情
+├── PUT    /api/semesters/{id}    更新学期
+└── DELETE /api/semesters/{id}    删除学期
+
+考试管理 (apps/exam)
+├── GET    /api/exams             考试列表
+├── POST   /api/exams             创建考试
+├── GET    /api/exams/{id}        考试详情
+├── PUT    /api/exams/{id}        更新考试
+└── DELETE /api/exams/{id}        删除考试
+
+成绩管理 (apps/score)
+├── GET    /api/scores            成绩列表
+├── POST   /api/scores            录入成绩
+├── GET    /api/scores/{id}       成绩详情
+├── PUT    /api/scores/{id}       更新成绩
+└── DELETE /api/scores/{id}       删除成绩
 
 仪表盘 (apps/dashboard)
 └── GET    /api/dashboard/stats          统计数据（支持 ?grade= 参数）
@@ -233,6 +256,163 @@ Authorization: Bearer <access_token>
 ```
 
 （未分页）
+
+---
+
+## 科目管理
+
+基础字典，供考试、成绩模块引用。种子数据已包含中小学所有常见科目（语文、数学、英语等）。
+
+### 科目列表 `GET /api/subjects`
+
+```json
+{
+    "data": [
+        { "id": 1, "name": "语文" },
+        { "id": 2, "name": "数学" }
+    ]
+}
+```
+
+（未分页）
+
+---
+
+## 学期管理
+
+基础字典，供考试模块引用。种子数据覆盖 2023-2024 ~ 2026-2027 四个学年共 8 个学期。
+
+字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 唯一标识，如 `2025-2026-1` |
+| `display_name` | string | 展示名称，如 `2025-2026学年第一学期` |
+
+### 学期列表 `GET /api/semesters`
+
+```json
+{
+    "data": [
+        { "id": 1, "name": "2025-2026-1", "display_name": "2025-2026学年第一学期" },
+        { "id": 2, "name": "2025-2026-2", "display_name": "2025-2026学年第二学期" }
+    ]
+}
+```
+
+（未分页）
+
+---
+
+## 考试管理
+
+考试计划模块用于管理考试名称、类型、时间、年级、学期等元信息。与成绩表解耦，同一考试名称在不同学期/日期下是独立记录。
+
+### 考试类型枚举
+
+| 值 | 中文 |
+|----|------|
+| `MONTHLY` | 月考 |
+| `MOCK` | 模拟考 |
+| `MIDTERM` | 期中 |
+| `FINAL` | 期末 |
+
+### 创建考试 `POST /api/exams`
+
+```json
+{
+    "name": "2026春季高一第一次月考",
+    "exam_type": "MONTHLY",
+    "exam_date": "2026-03-15",
+    "grade": "SENIOR_1",
+    "semester": 1
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 考试名称 |
+| `exam_type` | string | 枚举值：`MONTHLY`/`MOCK`/`MIDTERM`/`FINAL` |
+| `exam_date` | date | 考试日期 |
+| `grade` | string | 年级枚举值，如 `SENIOR_1` |
+| `semester` | int | 学期 ID（FK → Semester） |
+
+### 考试列表响应示例
+
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "name": "2026春季高一第一次月考",
+            "exam_type": "MONTHLY",
+            "exam_type_display": "月考",
+            "exam_date": "2026-03-15",
+            "grade": "SENIOR_1",
+            "grade_display": "高一",
+            "semester": 1,
+            "semester_display": "2025-2026学年第二学期"
+        }
+    ]
+}
+```
+
+---
+
+## 成绩管理
+
+核心枢纽表，将学生、考试、科目绑定。每条记录包含成绩分数。
+
+约束：同一学生 + 同一考试 + 同一科目只能有一条成绩记录。
+
+### 录入成绩 `POST /api/scores`
+
+```json
+{
+    "student": 1,
+    "exam": 1,
+    "subject": 2,
+    "score": 99.5
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `student` | int | 学生 ID（FK → StudentProfile） |
+| `exam` | int | 考试 ID（FK → ExamPlan） |
+| `subject` | int | 科目 ID（FK → Subjects） |
+| `score` | decimal | 分数，支持一位小数（0.0 ~ 999.9） |
+
+### 成绩列表响应示例
+
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "student": 1,
+            "student_name": "李四",
+            "student_no": "S2025001",
+            "exam": 1,
+            "exam_name": "2026春季高一第一次月考",
+            "subject": 2,
+            "subject_name": "数学",
+            "score": 99.5
+        }
+    ]
+}
+```
+
+### 数据关系链
+
+```
+Score.student → StudentProfile.class_id → Classes.grade
+                                  └──→ Classes.name
+Score.exam → ExamPlan (考试类型/日期/年级/学期)
+Score.subject → Subjects (科目名称)
+```
+
+通过这层关联，无需冗余存储即可按班级/年级/考试/科目等多维度查询和统计成绩。
 
 ---
 

@@ -4,11 +4,11 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from apps.subjects.models import Subjects
-from apps.subjects.serializers import SubjectsSerializer
+from apps.exam.models import ExamPlan
+from apps.exam.serializers import ExamPlanSerializer
 
 
-class SubjectsViewSet(viewsets.ModelViewSet):
-    queryset = Subjects.objects.all()
-    serializer_class = SubjectsSerializer
+class ExamPlanViewSet(viewsets.ModelViewSet):
+    queryset = ExamPlan.objects.all()
+    serializer_class = ExamPlanSerializer
     permission_classes = [IsAuthenticated]

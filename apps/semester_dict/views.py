@@ -4,11 +4,11 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from apps.subjects.models import Subjects
-from apps.subjects.serializers import SubjectsSerializer
+from apps.semester_dict.models import Semester
+from apps.semester_dict.serializers import SemesterSerializer
 
 
-class SubjectsViewSet(viewsets.ModelViewSet):
-    queryset = Subjects.objects.all()
-    serializer_class = SubjectsSerializer
+class SemesterViewSet(viewsets.ModelViewSet):
+    queryset = Semester.objects.all()
+    serializer_class = SemesterSerializer
     permission_classes = [IsAuthenticated]
