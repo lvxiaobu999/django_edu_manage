@@ -5,7 +5,7 @@
   path('api/', include('apps.auth.urls'))
     → POST /api/login          → LoginView
     → POST /api/logout         → LogoutView
-    → POST /api/login/refresh  → TokenRefreshView
+    → POST /api/token_refresh  → TokenRefreshView
     → POST /api/register       → RegisterView
 
 用户管理（apps.users）：
