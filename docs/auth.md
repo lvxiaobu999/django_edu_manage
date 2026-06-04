@@ -10,16 +10,16 @@
 
 | 方法 | URL | 说明 | 需要登录 |
 |------|-----|------|---------|
-| POST | `/api/login/` | 登录，返回 access + refresh token | 否 |
-| POST | `/api/logout/` | 登出，将 refresh token 加入黑名单 | 是 |
-| POST | `/api/login/refresh/` | 刷新 access token | 否 |
-| POST | `/api/register/` | 注册新用户 | 否 |
+| POST | `/api/login` | 登录，返回 access + refresh token | 否 |
+| POST | `/api/logout` | 登出，将 refresh token 加入黑名单 | 是 |
+| POST | `/api/login/refresh` | 刷新 access token | 否 |
+| POST | `/api/register` | 注册新用户 | 否 |
 
 ---
 
 ## 接口详情
 
-### 1. 登录 `POST /api/login/`
+### 1. 登录 `POST /api/login`
 
 请求体：
 
@@ -62,7 +62,7 @@
 | 用户名或密码错误 | 1 | 用户名或密码错误 |
 | 账户未激活 | 1 | 账户未激活，请等待管理员审核 |
 
-### 2. 登出 `POST /api/logout/`
+### 2. 登出 `POST /api/logout`
 
 需要携带 `Authorization: Bearer <access_token>` 头。
 
@@ -87,7 +87,7 @@
 
 > **注意：** refresh token 加入黑名单后无法再用于刷新。access token 无法主动失效，需等待自然过期（默认 30 分钟）。
 
-### 3. 刷新 Token `POST /api/login/refresh/`
+### 3. 刷新 Token `POST /api/login/refresh`
 
 access token 过期后，前端收到 HTTP 401，自动调用此接口换新 token。
 
@@ -120,7 +120,7 @@ access token 过期后，前端收到 HTTP 401，自动调用此接口换新 tok
 | refresh token 为空 | 400 | refresh token 不能为空 |
 | token 无效或已过期 | 401 | token 无效或已过期（需重新登录） |
 
-### 4. 注册 `POST /api/register/`
+### 4. 注册 `POST /api/register`
 
 请求体：
 
@@ -159,7 +159,7 @@ access token 过期后，前端收到 HTTP 401，自动调用此接口换新 tok
 }
 ```
 
-> **注意：** 注册后 `is_active=False`、`is_approved=False`，不能登录。需管理员调用 `POST /api/users/{id}/approve/` 审核通过。
+> **注意：** 注册后 `is_active=False`、`is_approved=False`，不能登录。需管理员调用 `POST /api/users/{id}/approve` 审核通过。
 
 ---
 
@@ -215,7 +215,7 @@ axios.interceptors.response.use(
     async error => {
         if (error.response?.status === 401) {
             const refresh = localStorage.getItem('refresh_token')
-            const { data } = await axios.post('/api/login/refresh/', { refresh })
+            const { data } = await axios.post('/api/login/refresh', { refresh })
             localStorage.setItem('access_token', data.data.access)
             localStorage.setItem('refresh_token', data.data.refresh)
             // 重试原请求

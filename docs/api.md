@@ -198,7 +198,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 学生简介 `POST/GET/PUT /api/profile/student/`
+### 学生简介 `POST/GET/PUT /api/profile/student`
 
 权限：`IsAuthenticated` + `IsRole('STUDENT')`
 
@@ -221,7 +221,7 @@ Authorization: Bearer <access_token>
 
 ## 教研组
 
-### 教研组列表 `GET /api/research-groups/`
+### 教研组列表 `GET /api/research-groups`
 
 ```json
 {
@@ -238,18 +238,18 @@ Authorization: Bearer <access_token>
 
 ## 仪表盘
 
-### 统计数据 `GET /api/dashboard/stats/`
+### 统计数据 `GET /api/dashboard/stats`
 
 全校统计（默认）：
 
 ```bash
-GET /api/dashboard/stats/
+GET /api/dashboard/stats
 ```
 
 某年级各班级人数：
 
 ```bash
-GET /api/dashboard/stats/?grade=GRADE_7
+GET /api/dashboard/stats?grade=GRADE_7
 ```
 
 响应结构见 [docs/dashboard.md](dashboard.md)
