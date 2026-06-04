@@ -61,7 +61,7 @@ def seed_users_profiles(apps, schema_editor):
     ClassDict = apps.get_model('dicts', 'ClassDict')
     ResearchGroupDict = apps.get_model('dicts', 'ResearchGroupDict')
 
-    pw_hash = make_password('password123')
+    pw_hash = make_password('z123456.')
 
     # 直接用 pk 列表查询，不用 order_by（避免 migration state 不包含字段的罕见兼容问题）
     class_ids = list(

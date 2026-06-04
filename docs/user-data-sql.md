@@ -13,20 +13,20 @@
 
 ## 登录账号
 
-所有账号密码统一为：**`password123`**
+所有账号密码统一为：**`z123456.`**
 
 ### 教师账号
 
 ```
 用户名格式：teacher001 ~ teacher120
-示例：teacher001 / password123
+示例：teacher001 / z123456.
 ```
 
 ### 学生账号
 
 ```
 用户名格式：student0001 ~ student3060
-示例：student0001 / password123
+示例：student0001 / z123456.
 ```
 
 ## 数据关系
