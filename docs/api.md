@@ -321,7 +321,6 @@ Authorization: Bearer <access_token>
 
 ```json
 {
-    "name": "2026春季高一第一次月考",
     "exam_type": "MONTHLY",
     "exam_date": "2026-03-15",
     "grade": "SENIOR_1",
@@ -331,11 +330,12 @@ Authorization: Bearer <access_token>
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `name` | string | 考试名称 |
 | `exam_type` | string | 枚举值：`MONTHLY`/`MOCK`/`MIDTERM`/`FINAL` |
 | `exam_date` | date | 考试日期 |
 | `grade` | string | 年级枚举值，如 `SENIOR_1` |
 | `semester` | int | 学期 ID（FK → Semester） |
+
+> `name` 字段由学期 + 年级 + 考试类型自动拼接生成，如 `2025-2026学年第一学期高一期中考试`。
 
 ### 考试列表响应示例
 
@@ -344,7 +344,7 @@ Authorization: Bearer <access_token>
     "data": [
         {
             "id": 1,
-            "name": "2026春季高一第一次月考",
+            "name": "2025-2026学年第二学期高一月考",
             "exam_type": "MONTHLY",
             "exam_type_display": "月考",
             "exam_date": "2026-03-15",
@@ -394,7 +394,7 @@ Authorization: Bearer <access_token>
             "student_name": "李四",
             "student_no": "S2025001",
             "exam": 1,
-            "exam_name": "2026春季高一第一次月考",
+            "exam_name": "2025-2026学年第二学期高一月考",
             "subject": 2,
             "subject_name": "数学",
             "score": 99.5

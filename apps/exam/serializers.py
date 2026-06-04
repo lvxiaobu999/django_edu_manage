@@ -15,3 +15,4 @@ class ExamPlanSerializer(serializers.ModelSerializer):
             'exam_date', 'grade', 'grade_display',
             'semester', 'semester_display',
         ]
+        read_only_fields = ['name']
