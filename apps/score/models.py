@@ -23,7 +23,7 @@ class Score(models.Model):
     )
     # PROTECT：科目被成绩引用后不可删除，防止数据悬空
     subject = models.ForeignKey(
-        'subjects.Subjects',
+        'dicts.SubjectDict',
         on_delete=models.PROTECT,
         related_name='scores',
         verbose_name='科目',

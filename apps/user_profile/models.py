@@ -37,13 +37,13 @@ class TeacherProfile(models.Model):
     )
     # M2M 字符串引用 'research_group.ResearchGroup'，跨 app 延迟加载，避免循环导入
     research_groups = models.ManyToManyField(
-        'research_group.ResearchGroup',
+        'dicts.ResearchGroupDict',
         blank=True,
         related_name='teachers',
         verbose_name='所属教研组',
     )
     class_ids = models.ManyToManyField(
-        'classes.Classes',
+        'dicts.ClassDict',
         blank=True,
         related_name='teachers',
         verbose_name='所教班级',
@@ -84,7 +84,7 @@ class StudentProfile(models.Model):
     )
     # ForeignKey：一个学生属于一个班级，班级删除时学生保留（SET_NULL）
     class_id = models.ForeignKey(
-        'classes.Classes',
+        'dicts.ClassDict',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

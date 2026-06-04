@@ -2,9 +2,8 @@ from django.db.models import Count
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from apps.classes.models import Classes, GradeChoices
 from apps.dashboard.serializers import DashboardStatsSerializer
-from apps.research_group.models import ResearchGroup
+from apps.dicts.models import ClassDict, GradeChoices, ResearchGroupDict
 from apps.user_profile.models import StudentProfile, TeacherProfile
 from django_edu_manage.common.response import fail, ok
 
@@ -26,8 +25,8 @@ class DashboardStatsView(APIView):
         totals = {
             'teachers': TeacherProfile.objects.count(),
             'students': StudentProfile.objects.count(),
-            'classes': Classes.objects.count(),
-            'research_groups': ResearchGroup.objects.count(),
+            'classes': ClassDict.objects.count(),
+            'research_groups': ResearchGroupDict.objects.count(),
         }
 
         # === 分布统计 ===
@@ -42,7 +41,7 @@ class DashboardStatsView(APIView):
             # 用 Classes 为主表左连 students（related_name），
             # 即使某班没有学生也能显示 count=0
             distribution = list(
-                Classes.objects
+                ClassDict.objects
                 .filter(grade=grade)
                 .annotate(count=Count('students'))
                 .order_by('name')

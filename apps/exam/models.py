@@ -4,7 +4,7 @@
 
 from django.db import models
 
-from apps.classes.models import GradeChoices
+from apps.dicts.models import GradeChoices
 
 
 class ExamTypeChoices(models.TextChoices):
@@ -28,7 +28,7 @@ class ExamPlan(models.Model):
         verbose_name='所属年级',
     )
     semester = models.ForeignKey(
-        'semester_dict.Semester',
+        'dicts.SemesterDict',
         on_delete=models.PROTECT,
         related_name='exams',
         verbose_name='所属学期',
@@ -49,7 +49,7 @@ class ExamPlan(models.Model):
         exam_str = self.get_exam_type_display()
         # 月考/模拟考本身已含"考"，不再追加"考试"后缀
         if exam_str.endswith('考'):
-            return f'{semester_str}{grade_str}{exam_str}'
+            return f'{semester_str}{grade_str}{exam_str}试'
         return f'{semester_str}{grade_str}{exam_str}考试'
 
     def save(self, *args, **kwargs):

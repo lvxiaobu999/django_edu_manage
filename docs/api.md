@@ -36,6 +36,12 @@
 Authorization: Bearer <access_token>
 ```
 
+### 路由约定
+
+- 所有 API 路由末尾无斜杠（`APPEND_SLASH = False`）
+- RESTful 风格：复数资源名，如 `/api/users`、`/api/classes`
+- 列表接口默认分页（`page` + `size` 参数），字典类接口不分页
+
 ### HTTP 状态码约定
 
 | 状态码 | 含义 |
@@ -64,32 +70,15 @@ Authorization: Bearer <access_token>
 ├── POST   /api/users/{id}/approve  审核通过
 └── GET    /api/users/pending    待审核用户列表
 
-班级管理 (apps/classes)
-├── GET    /api/classes          班级列表
-├── POST   /api/classes          创建班级
-├── GET    /api/classes/{id}     班级详情
-├── PUT    /api/classes/{id}     更新班级
-└── DELETE /api/classes/{id}     删除班级
+字典管理 (apps/dicts) —— 四合一基础字典
+├── GET/POST/PUT/DELETE  /api/subjects          科目
+├── GET/POST/PUT/DELETE  /api/semesters         学期
+├── GET/POST/PUT/DELETE  /api/research-groups   教研组
+├── GET/POST/PUT/DELETE  /api/classes           班级
 
 师生简介 (apps/user_profile)
 ├── POST/GET/PUT  /api/profile/teacher  教师简介
 └── POST/GET/PUT  /api/profile/student  学生简介
-
-教研组 (apps/research_group)（待补充）
-
-科目管理 (apps/subjects)
-├── GET    /api/subjects          科目列表
-├── POST   /api/subjects          创建科目
-├── GET    /api/subjects/{id}     科目详情
-├── PUT    /api/subjects/{id}     更新科目
-└── DELETE /api/subjects/{id}     删除科目
-
-学期管理 (apps/semester_dict)
-├── GET    /api/semesters         学期列表
-├── POST   /api/semesters         创建学期
-├── GET    /api/semesters/{id}    学期详情
-├── PUT    /api/semesters/{id}    更新学期
-└── DELETE /api/semesters/{id}    删除学期
 
 考试管理 (apps/exam)
 ├── GET    /api/exams             考试列表
@@ -172,19 +161,69 @@ Authorization: Bearer <access_token>
 
 ---
 
-## 班级管理
+## 字典管理
 
-### 字段说明
+> 科目、学期、教研组、班级四个基础字典统一归入 `apps/dicts` 模块。所有字典表已内置种子数据，可直接查询无需手动录入。
+
+### 科目 `GET /api/subjects`
+
+基础字典，供考试、成绩模块引用 FK。
+
+种子数据包含中小学全科 19 个科目：语文、数学、英语、物理、化学、生物、地理、历史、政治、科学、体育、音乐、美术、信息技术、通用技术、劳动、综合实践、书法、心理健康。
+
+```json
+{
+    "data": [
+        { "id": 1, "name": "语文" },
+        { "id": 2, "name": "数学" }
+    ]
+}
+```
+
+### 学期 `GET /api/semesters`
+
+供考试模块引用 FK。种子数据覆盖 2023-2024 ~ 2026-2027 四个学年。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 唯一标识，如 `2025-2026-1` |
+| `display_name` | string | 展示名称，如 `2025-2026学年第一学期` |
+
+```json
+{
+    "data": [
+        { "id": 1, "name": "2025-2026-1", "display_name": "2025-2026学年第一学期" },
+        { "id": 2, "name": "2025-2026-2", "display_name": "2025-2026学年第二学期" }
+    ]
+}
+```
+
+### 教研组 `GET /api/research-groups`
+
+种子数据包含 8 个教研组：语文组、数学组、英语组、物理组、化学组、地理组、生物组、体育组。
+
+```json
+{
+    "data": [
+        { "id": 1, "name": "语文组" },
+        { "id": 2, "name": "数学组" }
+    ]
+}
+```
+
+### 班级 `GET /api/classes`
+
+种子数据包含 102 个班级：小学 6 级 × 10 班 + 初中 3 级 × 8 班 + 高中 3 级 × 6 班。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `grade` | string | 年级枚举值，如 `GRADE_7` |
-| `grade_display` | string | 年级中文名，如"七年级"（只读） |
-| `name` | string | 班级名称，如"1班" |
+| `grade_display` | string | 年级中文名（只读） |
+| `name` | string | 班级名称，如 `1班` |
 | `headmaster` | int | 班主任 ID（可为 null） |
 | `headmaster_name` | string | 班主任姓名（只读，无班主任时为空） |
 
-### 年级枚举
+#### 年级枚举
 
 | 值 | 中文 | 值 | 中文 |
 |----|------|----|------|
@@ -242,71 +281,9 @@ Authorization: Bearer <access_token>
 
 ---
 
-## 教研组
-
-### 教研组列表 `GET /api/research-groups`
-
-```json
-{
-    "data": [
-        { "id": 1, "name": "语文教研组" },
-        { "id": 2, "name": "数学教研组" }
-    ]
-}
-```
-
-（未分页）
-
----
-
-## 科目管理
-
-基础字典，供考试、成绩模块引用。种子数据已包含中小学所有常见科目（语文、数学、英语等）。
-
-### 科目列表 `GET /api/subjects`
-
-```json
-{
-    "data": [
-        { "id": 1, "name": "语文" },
-        { "id": 2, "name": "数学" }
-    ]
-}
-```
-
-（未分页）
-
----
-
-## 学期管理
-
-基础字典，供考试模块引用。种子数据覆盖 2023-2024 ~ 2026-2027 四个学年共 8 个学期。
-
-字段：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `name` | string | 唯一标识，如 `2025-2026-1` |
-| `display_name` | string | 展示名称，如 `2025-2026学年第一学期` |
-
-### 学期列表 `GET /api/semesters`
-
-```json
-{
-    "data": [
-        { "id": 1, "name": "2025-2026-1", "display_name": "2025-2026学年第一学期" },
-        { "id": 2, "name": "2025-2026-2", "display_name": "2025-2026学年第二学期" }
-    ]
-}
-```
-
-（未分页）
-
----
-
 ## 考试管理
 
-考试计划模块用于管理考试名称、类型、时间、年级、学期等元信息。与成绩表解耦，同一考试名称在不同学期/日期下是独立记录。
+考试计划模块管理考试元信息。`name` 字段由学期 + 年级 + 考试类型自动拼接生成，无需手动填写。
 
 ### 考试类型枚举
 
@@ -332,10 +309,11 @@ Authorization: Bearer <access_token>
 |------|------|------|
 | `exam_type` | string | 枚举值：`MONTHLY`/`MOCK`/`MIDTERM`/`FINAL` |
 | `exam_date` | date | 考试日期 |
-| `grade` | string | 年级枚举值，如 `SENIOR_1` |
-| `semester` | int | 学期 ID（FK → Semester） |
+| `grade` | string | 年级枚举值 |
+| `semester` | int | 学期 ID（FK → SemesterDict） |
 
-> `name` 字段由学期 + 年级 + 考试类型自动拼接生成，如 `2025-2026学年第一学期高一期中考试`。
+> `name` 自动生成规则：`{学期display_name}{年级中文}{考试类型}` + 考试后缀（如考试类型已以"考"结尾则不重复添加）。
+> 示例：`2025-2026学年第一学期高一期中考试`，`2026-2027学年第一学期高三月考`。
 
 ### 考试列表响应示例
 
@@ -363,7 +341,7 @@ Authorization: Bearer <access_token>
 
 核心枢纽表，将学生、考试、科目绑定。每条记录包含成绩分数。
 
-约束：同一学生 + 同一考试 + 同一科目只能有一条成绩记录。
+约束：同一学生 + 同一考试 + 同一科目只能有一条成绩记录（unique constraint）。
 
 ### 录入成绩 `POST /api/scores`
 
@@ -380,7 +358,7 @@ Authorization: Bearer <access_token>
 |------|------|------|
 | `student` | int | 学生 ID（FK → StudentProfile） |
 | `exam` | int | 考试 ID（FK → ExamPlan） |
-| `subject` | int | 科目 ID（FK → Subjects） |
+| `subject` | int | 科目 ID（FK → SubjectDict） |
 | `score` | decimal | 分数，支持一位小数（0.0 ~ 999.9） |
 
 ### 成绩列表响应示例
@@ -406,13 +384,11 @@ Authorization: Bearer <access_token>
 ### 数据关系链
 
 ```
-Score.student → StudentProfile.class_id → Classes.grade
-                                  └──→ Classes.name
-Score.exam → ExamPlan (考试类型/日期/年级/学期)
-Score.subject → Subjects (科目名称)
+Score.student → StudentProfile.class_id → ClassDict.grade
+                                        → ClassDict.name
+Score.exam    → ExamPlan（考试类型/日期/年级/学期）
+Score.subject → SubjectDict（科目名称）
 ```
-
-通过这层关联，无需冗余存储即可按班级/年级/考试/科目等多维度查询和统计成绩。
 
 ---
 
@@ -422,17 +398,19 @@ Score.subject → Subjects (科目名称)
 
 全校统计（默认）：
 
-```bash
+```
 GET /api/dashboard/stats
 ```
 
+响应包含教师总数、学生总数、班级总数、教研组总数，以及各年级人数分布。
+
 某年级各班级人数：
 
-```bash
+```
 GET /api/dashboard/stats?grade=GRADE_7
 ```
 
-响应结构见 [docs/dashboard.md](dashboard.md)
+响应详见 [docs/dashboard.md](dashboard.md)
 
 ---
 
@@ -441,7 +419,7 @@ GET /api/dashboard/stats?grade=GRADE_7
 | code | 说明 |
 |------|------|
 | 0 | 成功 |
-| 1 | 业务错误（用户名密码错误、账户未激活等） |
+| 1 | 业务错误（参数无效、用户不存在等） |
 | 400 | 请求参数校验失败 |
 
 ---
@@ -451,6 +429,7 @@ GET /api/dashboard/stats?grade=GRADE_7
 | 文档 | 内容 |
 |------|------|
 | [auth.md](auth.md) | 认证接口详情、Token 生命周期、前端集成 |
+| [dict.md](dict.md) | 字典模块详述（模型、枚举、种子数据） |
 | [dashboard.md](dashboard.md) | 仪表盘接口文档 |
 | [mvt-architecture.md](mvt-architecture.md) | Model/View/Serializer 三层架构 |
 | [permissions_auth.md](permissions_auth.md) | 权限系统设计 |
