@@ -1,15 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from apps.core.choices import RoleChoices
+
 
 # === 角色枚举 ===
 # 继承 models.TextChoices 定义数据库枚举字段。
 # 每个成员格式：数据库值 = '存储值', '人类可读名称'
 # 比如数据库中存 'ADMIN'，通过 get_role_display() 显示为 '管理员'
-class RoleChoices(models.TextChoices):
-    ADMIN = 'ADMIN', '管理员'
-    TEACHER = 'TEACHER', '老师'
-    STUDENT = 'STUDENT', '学生'
+
 
 
 # === 用户模型 ===

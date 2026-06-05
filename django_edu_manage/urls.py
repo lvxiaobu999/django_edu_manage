@@ -38,6 +38,11 @@
   path('api/', include('apps.score.urls'))
     → /api/scores → ScoreViewSet
 
+枚举值（apps.core）：
+  path('api/', include('apps.core.urls'))
+    → GET /api/choices          所有枚举
+    → GET /api/choices?key=roles  指定枚举
+
 仪表盘：
   path('api/dashboard/', include('apps.dashboard.urls'))
     → GET /api/dashboard/stats
@@ -47,6 +52,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('apps.core.urls')),
     path('api/', include('apps.auth.urls')),
     path('api/', include('apps.users.urls')),
     path('api/', include('apps.dicts.urls')),

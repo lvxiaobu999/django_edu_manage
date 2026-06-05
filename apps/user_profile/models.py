@@ -2,11 +2,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-
-# === 性别枚举 ===
-class GenderChoices(models.TextChoices):
-    MALE = 'MALE', '男'
-    FEMALE = 'FEMALE', '女'
+from apps.core.choices import GenderChoices
 
 
 # === 老师简介 ===

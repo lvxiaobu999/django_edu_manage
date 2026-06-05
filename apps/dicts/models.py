@@ -4,22 +4,7 @@
 
 from django.db import models
 
-
-# =========================== 年级枚举 ===========================
-class GradeChoices(models.TextChoices):
-    GRADE_1 = 'GRADE_1', '一年级'
-    GRADE_2 = 'GRADE_2', '二年级'
-    GRADE_3 = 'GRADE_3', '三年级'
-    GRADE_4 = 'GRADE_4', '四年级'
-    GRADE_5 = 'GRADE_5', '五年级'
-    GRADE_6 = 'GRADE_6', '六年级'
-    GRADE_7 = 'GRADE_7', '七年级'
-    GRADE_8 = 'GRADE_8', '八年级'
-    GRADE_9 = 'GRADE_9', '九年级'
-    SENIOR_1 = 'SENIOR_1', '高一'
-    SENIOR_2 = 'SENIOR_2', '高二'
-    SENIOR_3 = 'SENIOR_3', '高三'
-
+from apps.core.choices import GradeChoices
 
 # =========================== 科目字典 ===========================
 class SubjectDict(models.Model):

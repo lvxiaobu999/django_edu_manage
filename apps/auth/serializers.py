@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from apps.users.models import RoleChoices, User
+from apps.core.choices import RoleChoices
+from apps.users.models import User
 
 
 # === 注册序列化器 ===

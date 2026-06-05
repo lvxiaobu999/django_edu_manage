@@ -55,6 +55,10 @@ Authorization: Bearer <access_token>
 ## API 总览
 
 ```
+基础枚举 (apps/core)
+├── GET    /api/choices          所有枚举
+└── GET    /api/choices?key=roles  指定枚举
+
 认证模块 (apps/auth)
 ├── POST /api/login             登录
 ├── POST /api/logout            登出
@@ -103,6 +107,14 @@ Authorization: Bearer <access_token>
 ## 认证模块
 
 详见 [docs/auth.md](auth.md)
+
+### 常见登录错误
+
+| 状态码 | code | 说明 |
+|--------|------|------|
+| 200 | 1 | 用户名或密码错误 |
+| 200 | 1 | 账户未激活，请等待管理员审核 |
+| 401 | - | access token 过期，需调 refresh 接口 |
 
 ---
 
@@ -411,6 +423,39 @@ GET /api/dashboard/stats?grade=GRADE_7
 ```
 
 响应详见 [docs/dashboard.md](dashboard.md)
+
+---
+
+## 枚举值
+
+可通过 `/api/choices` 获取所有枚举值，前端无需硬编码。
+
+```
+GET /api/choices          返回全部：roles / grades / exam_types / genders
+GET /api/choices?key=roles  只返回角色枚举
+```
+
+---
+
+## 完整使用流程
+
+```
+1. POST /api/register             注册账户，选择角色
+
+2. POST /api/login                获取 access_token + refresh_token
+   后续请求带 Authorization: Bearer <access_token>
+
+3. POST /api/profile/teacher      根据角色完善简介（教师或学生二选一）
+   或 POST /api/profile/student
+
+4. 管理员 GET  /api/users/pending    查看待审核列表
+5. 管理员 POST /api/users/{id}/approve  审核通过
+
+6. access_token 过期后：
+   POST /api/token_refresh         用 refresh_token 换新 access_token
+
+7. POST /api/logout                登出，refresh_token 加入黑名单
+```
 
 ---
 

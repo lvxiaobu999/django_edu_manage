@@ -2,8 +2,9 @@ from django.db.models import Count
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
+from apps.core.choices import GradeChoices
 from apps.dashboard.serializers import DashboardStatsSerializer
-from apps.dicts.models import ClassDict, GradeChoices, ResearchGroupDict
+from apps.dicts.models import ClassDict, ResearchGroupDict
 from apps.user_profile.models import StudentProfile, TeacherProfile
 from django_edu_manage.common.response import fail, ok
 

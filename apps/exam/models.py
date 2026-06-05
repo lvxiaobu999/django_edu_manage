@@ -4,15 +4,7 @@
 
 from django.db import models
 
-from apps.dicts.models import GradeChoices
-
-
-class ExamTypeChoices(models.TextChoices):
-    MONTHLY = 'MONTHLY', '月考'
-    MOCK = 'MOCK', '模拟考'
-    MIDTERM = 'MIDTERM', '期中'
-    FINAL = 'FINAL', '期末'
-
+from apps.core.choices import ExamTypeChoices, GradeChoices
 
 class ExamPlan(models.Model):
     name = models.CharField(max_length=200, blank=True, verbose_name='考试名称')
