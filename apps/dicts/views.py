@@ -4,6 +4,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from apps.core.pagination import StandardResultsSetPagination
 from apps.dicts.models import ClassDict, ResearchGroupDict, SemesterDict, SubjectDict
 from apps.dicts.serializers import (
     ClassDictSerializer,
@@ -17,21 +18,25 @@ class SubjectDictViewSet(viewsets.ModelViewSet):
     queryset = SubjectDict.objects.all()
     serializer_class = SubjectDictSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
 
 class SemesterDictViewSet(viewsets.ModelViewSet):
     queryset = SemesterDict.objects.all()
     serializer_class = SemesterDictSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
 
 class ResearchGroupDictViewSet(viewsets.ModelViewSet):
     queryset = ResearchGroupDict.objects.all()
     serializer_class = ResearchGroupDictSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
 
 class ClassDictViewSet(viewsets.ModelViewSet):
     queryset = ClassDict.objects.select_related('headmaster__user')
     serializer_class = ClassDictSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
