@@ -36,7 +36,25 @@ class ResearchGroupDictViewSet(viewsets.ModelViewSet):
 
 
 class ClassDictViewSet(viewsets.ModelViewSet):
-    queryset = ClassDict.objects.select_related('headmaster__user')
+    # queryset = ClassDict.objects.select_related('headmaster__user')
+    queryset = ClassDict.objects.all()
     serializer_class = ClassDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        qs = ClassDict.objects.select_related('headmaster')
+
+        grade = self.request.query_params.get('grade', '').strip()
+        if grade:
+            qs = qs.filter(grade=grade)
+
+        name = self.request.query_params.get('name', '').strip()
+        if name:
+            qs = qs.filter(name__icontains=name)
+
+        headmaster = self.request.query_params.get('headmaster', '').strip()
+        if headmaster:
+            qs = qs.filter(headmaster__realname__icontains=headmaster)
+
+        return qs
