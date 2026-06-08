@@ -8,6 +8,7 @@ from apps.user_profile.serializers import (
     TeacherProfileSerializer,
 )
 from apps.core.permissions import IsRole
+from django_edu_manage.common.response import ok
 
 
 # === 老师简介视图 ===
@@ -32,7 +33,7 @@ class TeacherProfileView(CreateAPIView, RetrieveUpdateAPIView):
             serializer = self.get_serializer(profile, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
-            return Response(serializer.data)
+            return ok(data=serializer.data, message='更新成功')
         return super().create(request, *args, **kwargs)
 
 
@@ -51,5 +52,5 @@ class StudentProfileView(CreateAPIView, RetrieveUpdateAPIView):
             serializer = self.get_serializer(profile, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
-            return Response(serializer.data)
+            return ok(data=serializer.data, message='更新成功')
         return super().create(request, *args, **kwargs)

@@ -1,12 +1,14 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.core.pagination import StandardResultsSetPagination
+from apps.core.viewsets import BaseViewSet
 from apps.users.permissions import IsApprovedAdmin
 from apps.users.serializers import UserSerializer
 from django_edu_manage.common.response import fail, ok
@@ -23,11 +25,15 @@ class PendingUserListView(ListAPIView):
     def get_queryset(self):
         return User.objects.filter(is_approved=False)
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        return ok(data=response.data)
+
 
 # === 用户 ViewSet ===
 # ModelViewSet 提供 list/create/retrieve/update/destroy 五个标准动作，
 # 配合 DefaultRouter 自动生成 RESTful 路由
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(BaseViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsApprovedAdmin]
