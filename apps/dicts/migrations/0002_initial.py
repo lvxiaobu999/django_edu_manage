@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('dicts', '0001_initial'),
-        ('user_profile', '0001_initial'),
+        ('teachers', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='classdict',
             name='headmaster',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='headmaster_classes', to='user_profile.teacherprofile', verbose_name='班主任'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='headmaster_classes', to='teachers.teacherprofile', verbose_name='班主任'),
         ),
         migrations.AddConstraint(
             model_name='classdict',

@@ -26,9 +26,10 @@
     → /api/classes            → ClassDictViewSet (班级)
 
 师生简介：
-  path('api/profile/', include('apps.user_profile.urls'))
-    → /api/profile/teacher  → TeacherProfileView
-    → /api/profile/student  → StudentProfileView
+  path('api/students/', include('apps.students.urls'))
+    → /api/students         → StudentProfileViewSet（完整 CRUD）
+  path('api/teachers/', include('apps.teachers.urls'))
+    → /api/teachers         → TeacherProfileViewSet（完整 CRUD）
 
 考试管理：
   path('api/', include('apps.exam.urls'))
@@ -49,14 +50,25 @@
 """
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # API 文档
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # 业务接口
     path('api/', include('apps.core.urls')),
     path('api/', include('apps.auth.urls')),
     path('api/', include('apps.users.urls')),
     path('api/', include('apps.dicts.urls')),
-    path('api/profile/', include('apps.user_profile.urls')),
+    path('api/', include('apps.students.urls')),
+    path('api/', include('apps.teachers.urls')),
     path('api/', include('apps.exam.urls')),
     path('api/', include('apps.score.urls')),
     path('api/dashboard/', include('apps.dashboard.urls')),

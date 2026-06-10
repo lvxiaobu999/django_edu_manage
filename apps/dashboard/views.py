@@ -1,25 +1,27 @@
 from django.db.models import Count
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from apps.core.choices import GradeChoices
 from apps.dashboard.serializers import DashboardStatsSerializer
 from apps.dicts.models import ClassDict, ResearchGroupDict
-from apps.user_profile.models import StudentProfile, TeacherProfile
+from apps.students.models import StudentProfile
+from apps.teachers.models import TeacherProfile
 from django_edu_manage.common.response import fail, ok
 
 
 class DashboardStatsView(APIView):
-    """仪表盘统计接口。
-
-    GET /api/dashboard/stats/
-        返回各年级学生人数分布（一年级到高三）
-
-    GET /api/dashboard/stats/?grade=GRADE_7
-        返回指定年级下各班级的学生人数
-    """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary='仪表盘统计',
+        description='返回教师/学生/班级/教研组总数及各年级人数分布。传 grade 参数可查指定年级各班级人数。',
+        parameters=[
+            OpenApiParameter(name='grade', description='年级编码（可选）', required=False, type=str,
+                             enum=GradeChoices.values),
+        ],
+    )
     def get(self, request):
         # === 总数统计 ===
         # 直接从各表 count，一次 SQL 一个，简单高效

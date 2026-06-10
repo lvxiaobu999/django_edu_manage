@@ -10,7 +10,7 @@ from django.db import models
 class Score(models.Model):
     # 通过 StudentProfile 可级联找到班级、年级信息
     student = models.ForeignKey(
-        'user_profile.StudentProfile',
+        'students.StudentProfile',
         on_delete=models.CASCADE,
         related_name='scores',
         verbose_name='学生',

@@ -20,6 +20,7 @@
 """
 
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
 from apps.core.pagination import StandardResultsSetPagination
 from apps.core.viewsets import BaseViewSet
@@ -32,22 +33,46 @@ from apps.dicts.serializers import (
 )
 
 
+@extend_schema_view(
+    list=extend_schema(summary='科目列表', description='返回所有科目的 id 和 name。'),
+    create=extend_schema(summary='新增科目'),
+    retrieve=extend_schema(summary='查看科目详情'),
+    update=extend_schema(summary='全量更新科目'),
+    partial_update=extend_schema(summary='部分更新科目'),
+    destroy=extend_schema(summary='删除科目'),
+)
 class SubjectDictViewSet(BaseViewSet):
-    """科目字典 — 字段简单，无关联表，直接 all() 即可。"""
+    """科目字典。"""
     queryset = SubjectDict.objects.all()
     serializer_class = SubjectDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
 
+@extend_schema_view(
+    list=extend_schema(summary='学期列表'),
+    create=extend_schema(summary='新增学期'),
+    retrieve=extend_schema(summary='查看学期详情'),
+    update=extend_schema(summary='全量更新学期'),
+    partial_update=extend_schema(summary='部分更新学期'),
+    destroy=extend_schema(summary='删除学期'),
+)
 class SemesterDictViewSet(BaseViewSet):
-    """学期字典 — 字段简单，无关联表。"""
+    """学期字典。"""
     queryset = SemesterDict.objects.all()
     serializer_class = SemesterDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
 
+@extend_schema_view(
+    list=extend_schema(summary='教研组列表'),
+    create=extend_schema(summary='新增教研组'),
+    retrieve=extend_schema(summary='查看教研组详情'),
+    update=extend_schema(summary='全量更新教研组'),
+    partial_update=extend_schema(summary='部分更新教研组'),
+    destroy=extend_schema(summary='删除教研组'),
+)
 class ResearchGroupDictViewSet(BaseViewSet):
     """教研组字典 — 字段简单，无关联表。"""
     queryset = ResearchGroupDict.objects.all()
@@ -56,6 +81,24 @@ class ResearchGroupDictViewSet(BaseViewSet):
     pagination_class = StandardResultsSetPagination
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary='班级列表',
+        description='支持按年级、班级名、班主任姓名筛选。',
+        parameters=[
+            OpenApiParameter(name='grade', description='年级编码', required=False, type=str,
+                             enum=['GRADE_1','GRADE_2','GRADE_3','GRADE_4','GRADE_5','GRADE_6',
+                                   'GRADE_7','GRADE_8','GRADE_9','SENIOR_1','SENIOR_2','SENIOR_3']),
+            OpenApiParameter(name='name', description='班级名模糊搜索', required=False, type=str),
+            OpenApiParameter(name='headmaster', description='班主任姓名模糊搜索', required=False, type=str),
+        ],
+    ),
+    create=extend_schema(summary='新增班级'),
+    retrieve=extend_schema(summary='查看班级详情'),
+    update=extend_schema(summary='全量更新班级'),
+    partial_update=extend_schema(summary='部分更新班级'),
+    destroy=extend_schema(summary='删除班级'),
+)
 class ClassDictViewSet(BaseViewSet):
     """班级字典 — 支持按年级、班级名、班主任姓名筛选。
 

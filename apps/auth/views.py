@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.auth.serializers import (
     LoginSerializer,
@@ -20,15 +21,16 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-# === 登录视图 ===
-# JWT 认证流程：
-#   用户提交用户名密码 → 验证通过 → 返回 access token + refresh token
-#   access token：短期有效（默认 30 分钟），用于调用受保护的 API
-#   refresh token：长期有效（默认 7 天），用于在 access token 过期后获取新的
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(
+        summary='用户登录',
+        description='提交用户名和密码，返回 JWT access token 和 refresh token。',
+        request=LoginSerializer,
+        responses={200: None},
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -54,12 +56,15 @@ class LoginView(APIView):
         })
 
 
-# === 登出视图 ===
-# JWT 无状态，登出靠黑名单：客户端传 refresh token → 服务端将其加入黑名单
-# access token 无法主动失效（除非过期），缓解措施是设短有效期（默认 30 分钟）
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary='用户登出',
+        description='提交 refresh token，服务端将其加入黑名单使其失效。',
+        request=LogoutSerializer,
+        responses={200: None},
+    )
     def post(self, request):
         serializer = LogoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -74,12 +79,15 @@ class LogoutView(APIView):
             return ok(message='已退出登录')
 
 
-# === Token 刷新视图 ===
-# access token 过期后，前端用 refresh token 换新的 access + refresh token
 class TokenRefreshView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(
+        summary='刷新 Token',
+        description='access token 过期后，用 refresh token 换取新的 access + refresh token。',
+        responses={200: None},
+    )
     def post(self, request):
         refresh_token = request.data.get('refresh')
         if not refresh_token:
@@ -98,8 +106,9 @@ class TokenRefreshView(APIView):
                         status_code=status.HTTP_401_UNAUTHORIZED)
 
 
-# === 注册视图 ===
-# CreateAPIView：只处理 POST，内建 serializer.is_valid() → serializer.save()
+@extend_schema_view(
+    create=extend_schema(summary='用户注册', description='提交用户名、密码、邮箱和角色，创建新用户。默认 is_approved=False 需管理员审核。'),
+)
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer

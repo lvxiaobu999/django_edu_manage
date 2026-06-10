@@ -95,11 +95,13 @@ INSTALLED_APPS = [
     'apps.core.apps.CoreConfig',
     'apps.auth.apps.AuthConfig',
     'apps.users.apps.UsersConfig',
-    'apps.user_profile.apps.UserProfileConfig',
+    'apps.students.apps.StudentsConfig',
+    'apps.teachers.apps.TeachersConfig',
     'apps.dicts.apps.DictsConfig',
     'apps.exam.apps.ExamConfig',
     'apps.score.apps.ScoreConfig',
     'apps.dashboard.apps.DashboardConfig',
+    'drf_spectacular',  # OpenAPI 3.0 自动生成 & Swagger UI
 ]
 
 
@@ -299,6 +301,34 @@ REST_FRAMEWORK = {
     ],
     # 自定义异常处理：将 DRF 异常转为统一响应格式
     'EXCEPTION_HANDLER': 'django_edu_manage.common.exceptions.unified_exception_handler',
+    # drf-spectacular：自动生成 OpenAPI 3.0 Schema
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# ========================== drf-spectacular 配置 ==========================
+SPECTACULAR_SETTINGS = {
+    'TITLE': '教务管理系统 API',
+    'DESCRIPTION': (
+        '教务管理系统的 RESTful API 文档，支持学生/老师/班级/考试/成绩的完整管理。\n\n'
+        '**认证方式**：JWT Bearer Token（登录后获取 access token，在右上角 Authorize 填入）。\n\n'
+        '**统一响应格式**：`{"success": true/false, "code": 0, "message": "...", "data": ..., "meta": {...}}`\n\n'
+        '**分页参数**：`?page=1&pageSize=10`（支持分页的接口）'
+    ),
+    'VERSION': '0.1.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # 不在 Swagger UI 中暴露 /api/schema/ 自身
+    # 将 JWT 认证映射到 OpenAPI Bearer 安全方案
+    'SECURITY': [{'bearerAuth': []}],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'bearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': '输入登录接口返回的 access token（不含 Bearer 前缀）',
+            },
+        },
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 

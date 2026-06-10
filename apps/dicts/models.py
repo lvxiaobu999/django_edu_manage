@@ -52,7 +52,7 @@ class ClassDict(models.Model):
     grade = models.CharField(max_length=20, choices=GradeChoices.choices, verbose_name='年级')
     name = models.CharField(max_length=50, verbose_name='班级名称')
     headmaster = models.ForeignKey(
-        'user_profile.TeacherProfile',
+        'teachers.TeacherProfile',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

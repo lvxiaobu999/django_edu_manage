@@ -29,7 +29,7 @@
 ## 成功响应示例
 
 ```bash
-# GET /api/profile/teacher/
+# GET /api/teachers/
 {
     "success": true,
     "code": 0,

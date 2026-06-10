@@ -49,7 +49,8 @@
   - 所有业务模块
   - `core/`：全局基础设施
   - `users/`：用户认证管理
-  - `user_profile/`：师生档案
+  - `students/`：学生档案
+  - `teachers/`：教师档案
   - `classes/`：班级管理
   - `research_group/`：教研组
   - `dashboard/`：统计仪表盘

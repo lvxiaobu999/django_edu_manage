@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.core.pagination import StandardResultsSetPagination
 from apps.core.viewsets import BaseViewSet
@@ -17,7 +18,9 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-# === 待审核用户列表 ===
+@extend_schema_view(
+    list=extend_schema(summary='未审核用户列表', description='返回所有 is_approved=False 的用户。仅已审核管理员可用。'),
+)
 class PendingUserListView(ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsApprovedAdmin]
@@ -30,15 +33,21 @@ class PendingUserListView(ListAPIView):
         return ok(data=response.data)
 
 
-# === 用户 ViewSet ===
-# ModelViewSet 提供 list/create/retrieve/update/destroy 五个标准动作，
-# 配合 DefaultRouter 自动生成 RESTful 路由
+@extend_schema_view(
+    list=extend_schema(summary='用户列表', description='查看所有用户，支持分页。仅已审核管理员可用。'),
+    create=extend_schema(summary='创建用户'),
+    retrieve=extend_schema(summary='查看用户详情'),
+    update=extend_schema(summary='全量更新用户'),
+    partial_update=extend_schema(summary='部分更新用户'),
+    destroy=extend_schema(summary='删除用户'),
+)
 class UserViewSet(BaseViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsApprovedAdmin]
     pagination_class = StandardResultsSetPagination
 
+    @extend_schema(summary='审核用户', description='管理员审核通过指定用户（设置 is_approved=True, is_active=True）。')
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         user = self.get_object()

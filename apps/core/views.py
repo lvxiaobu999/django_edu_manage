@@ -1,5 +1,6 @@
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from apps.core.choices import (
     ExamTypeChoices,
@@ -9,7 +10,6 @@ from apps.core.choices import (
 )
 from django_edu_manage.common.response import ok
 
-# 注册表：新增枚举在这里加一行即可，接口自动生效
 CHOICES_REGISTRY = {
     'roles': RoleChoices,
     'grades': GradeChoices,
@@ -19,22 +19,16 @@ CHOICES_REGISTRY = {
 
 
 class ChoicesView(APIView):
-    """枚举值接口。
-
-    GET /api/choices
-        返回前端需要的所有枚举，格式：
-        {
-          "roles": [{"value": "ADMIN", "label": "管理员"}, ...],
-          "grades": [{"value": "GRADE_1", "label": "一年级"}, ...],
-          "exam_types": [{"value": "MONTHLY", "label": "月考"}, ...],
-          "genders": [{"value": "MALE", "label": "男"}, ...]
-        }
-
-    GET /api/choices?key=roles
-        只返回指定枚举
-    """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary='获取枚举值',
+        description='返回角色、年级、考试类型、性别等枚举。可选参数 key 指定只返回某一类。',
+        parameters=[
+            OpenApiParameter(name='key', description='枚举键名', required=False, type=str,
+                             enum=list(CHOICES_REGISTRY.keys())),
+        ],
+    )
     def get(self, request):
         key = request.query_params.get('key', '').strip()
 

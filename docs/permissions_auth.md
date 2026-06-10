@@ -349,7 +349,7 @@ class IsApprovedAdmin(BasePermission):
 
 class IsRole(BasePermission):
     """角色检查：IsRole('TEACHER') 只允许教师访问"""
-    # 用于 /api/profile/teacher/ 和 /api/profile/student/
+    # 用于 /api/teachers/ 和 /api/students/
 ```
 
 ### 6.3 权限检查优先级
@@ -396,7 +396,7 @@ permission_classes = [IsAuthenticated, IsApprovedAdmin]
                       │
 ┌─────────────────────▼───────────────────────────┐
 │  3. 完善个人简介                                  │
-│  POST /api/profile/student/                      │
+│  POST /api/students/                             │
 │  { "stu_no":"S001", "realname":"张三" }          │
 │  → 创建 StudentProfile                           │
 └─────────────────────┬───────────────────────────┘

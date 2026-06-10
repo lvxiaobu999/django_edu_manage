@@ -21,7 +21,7 @@
 class Classes(models.Model):
     grade = models.CharField(max_length=20, choices=GradeChoices.choices)
     name = models.CharField(max_length=50)
-    headmaster = models.ForeignKey('user_profile.TeacherProfile', ...)
+    headmaster = models.ForeignKey('teachers.TeacherProfile', ...)
 
     class Meta:
         db_table = 'classes'          # 数据库表名
@@ -200,7 +200,7 @@ JSON 响应  [{ "id":1, "grade":"GRADE_7", "grade_display":"七年级", ... }, .
 
 ### 模式 A：Model + ModelSerializer + ModelViewSet（标准 CRUD）
 
-**代表模块：** `classes`、`users`、`user_profile`、`research_group`
+**代表模块：** `classes`、`users`、`students`、`teachers`、`research_group`
 
 ```
 models.py        →  定义数据库表结构

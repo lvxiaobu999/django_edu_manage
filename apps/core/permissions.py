@@ -16,10 +16,9 @@ def IsRole(role):
 
     class _IsRole(BasePermission):
         def has_permission(self, request, view):
-            return (
-                request.user.is_authenticated
-                and request.user.role == role
-            )
+            # 兼容单角色字符串和多角色列表/元组
+            allowed = role if isinstance(role, (list, tuple)) else [role]
+            return request.user.is_authenticated and request.user.role in allowed
 
         def has_object_permission(self, request, view, obj):
             return self.has_permission(request, view)

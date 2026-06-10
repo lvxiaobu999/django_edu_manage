@@ -11,14 +11,14 @@ class Migration(migrations.Migration):
     dependencies = [
         ('dicts', '0002_initial'),
         ('score', '0001_initial'),
-        ('user_profile', '0001_initial'),
+        ('students', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='score',
             name='student',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='scores', to='user_profile.studentprofile', verbose_name='学生'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='scores', to='students.studentprofile', verbose_name='学生'),
         ),
         migrations.AddField(
             model_name='score',
