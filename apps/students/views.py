@@ -1,8 +1,16 @@
-"""学生 ViewSet —— 完整 CRUD，管理员可按 ID 操作任意学生。"""
+"""学生 ViewSet —— 完整 CRUD，管理员可按 ID 操作任意学生。
+
+查询参数（仅 list）：
+    stu_no    — 学号模糊搜索（忽略大小写），如 ?stu_no=2024
+    realname  — 姓名模糊搜索（忽略大小写），如 ?realname=张
+    grade     — 年级编码精确匹配，如 ?grade=GRADE_1
+    class_id  — 班级 ID 精确匹配，如 ?class_id=1
+"""
 
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
+from apps.core.choices import GradeChoices
 from apps.core.pagination import StandardResultsSetPagination
 from apps.core.permissions import IsRole
 from apps.core.viewsets import BaseViewSet
@@ -13,7 +21,15 @@ from apps.students.serializers import StudentProfileSerializer
 @extend_schema_view(
     list=extend_schema(
         summary='学生列表',
-        description='管理员查看所有学生简介，支持分页。学生角色调用仅返回自己的简介。',
+        description='管理员查看所有学生简介，支持按学号、姓名、年级、班级筛选并分页。'
+                    '学生角色调用仅返回自己的简介。',
+        parameters=[
+            OpenApiParameter(name='stu_no', description='学号模糊搜索', required=False, type=str),
+            OpenApiParameter(name='realname', description='姓名模糊搜索', required=False, type=str),
+            OpenApiParameter(name='grade', description='年级编码精确匹配', required=False, type=str,
+                             enum=GradeChoices.values),
+            OpenApiParameter(name='class_id', description='班级 ID 精确匹配', required=False, type=int),
+        ],
     ),
     create=extend_schema(
         summary='创建学生简介',
@@ -38,9 +54,29 @@ class StudentProfileViewSet(BaseViewSet):
 
     def get_queryset(self):
         qs = StudentProfile.objects.select_related('user', 'class_id')
-        if self.request.user.role == 'ADMIN':
-            return qs.all()
-        return qs.filter(user=self.request.user)
+
+        # 角色权限过滤：管理员看全部，学生只能看自己
+        if self.request.user.role != 'ADMIN':
+            qs = qs.filter(user=self.request.user)
+
+        # 查询参数过滤
+        stu_no = self.request.query_params.get('stu_no', '').strip()
+        if stu_no:
+            qs = qs.filter(stu_no__icontains=stu_no)
+
+        realname = self.request.query_params.get('realname', '').strip()
+        if realname:
+            qs = qs.filter(realname__icontains=realname)
+
+        grade = self.request.query_params.get('grade', '').strip()
+        if grade:
+            qs = qs.filter(class_id__grade=grade)
+
+        class_id = self.request.query_params.get('class_id', '').strip()
+        if class_id:
+            qs = qs.filter(class_id=class_id)
+
+        return qs
 
     def get_permissions(self):
         if self.action in ('list', 'destroy'):
