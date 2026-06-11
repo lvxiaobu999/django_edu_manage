@@ -35,9 +35,20 @@ class TeacherProfileViewSet(BaseViewSet):
 
     def get_queryset(self):
         qs = TeacherProfile.objects.select_related('user')
-        if self.request.user.role == 'ADMIN':
-            return qs.all()
-        return qs.filter(user=self.request.user)
+
+        if self.request.user.role != 'ADMIN':
+            return qs.filter(user=self.request.user)
+        
+        # 查询参数过滤
+        emp_no = self.request.query_params.get('emp_no', '').strip()
+        if emp_no:
+            qs = qs.filter(emp_no__icontains=emp_no)
+        realname = self.request.query_params.get('realname', '').strip()
+        if realname:
+            qs = qs.filter(realname__icontains=realname)
+
+
+        return qs
 
     def get_permissions(self):
         if self.action in ('list', 'destroy'):
