@@ -85,10 +85,11 @@ API 文档
 ├── /api/subjects           科目字典（完整 CRUD）
 ├── /api/semesters          学期字典（完整 CRUD）
 ├── /api/research-groups    教研组字典（完整 CRUD）
-└── /api/classes            班级字典（完整 CRUD + grade/name/headmaster 筛选）
+├── /api/classes            班级字典（完整 CRUD + grade/name/headmaster 筛选）
+└── /api/classes/grade-classes   年级-班级级联数据
 
 学生管理
-├── GET    /api/students              学生列表（分页，仅管理员）
+├── GET    /api/students              学生列表（分页 + stu_no/realname/grade/class_id 筛选，仅管理员）
 ├── POST   /api/students              创建学生简介（管理员可为他人创建）
 ├── GET    /api/students/{id}         按 ID 查看详情
 ├── PUT    /api/students/{id}         全量更新
@@ -258,6 +259,40 @@ API 文档
 | `GRADE_5` | 五年级 | `SENIOR_2` | 高二 |
 | `GRADE_6` | 六年级 | `SENIOR_3` | 高三 |
 
+### 年级-班级联动 `GET /api/classes/grade-classes`
+
+返回所有年级及其下班级的级联数据，用于前端年级-班级二级联动下拉。无需认证之外的额外权限。
+
+```json
+{
+    "data": [
+        {
+            "grade_id": "GRADE_1",
+            "grade_name": "一年级",
+            "classes": [
+                {"class_id": 1, "class_name": "1班"},
+                {"class_id": 2, "class_name": "2班"}
+            ]
+        },
+        {
+            "grade_id": "GRADE_2",
+            "grade_name": "二年级",
+            "classes": []
+        }
+    ]
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `grade_id` | string | 年级编码（枚举值） |
+| `grade_name` | string | 年级中文名 |
+| `classes` | array | 该年级下的班级列表 |
+| `classes[].class_id` | int | 班级 ID |
+| `classes[].class_name` | string | 班级名称 |
+
+> 无班级的年级也会返回，`classes` 为空数组，确保前端下拉选项完整。
+
 ---
 
 ## 学生管理
@@ -279,12 +314,27 @@ API 文档
 ### 接口列表
 
 ```
-GET    /api/students             管理员查看所有学生（分页）；学生角色只返回自己的
+GET    /api/students             管理员查看所有学生（分页 + 筛选）；学生角色只返回自己的
 POST   /api/students             创建学生简介
 GET    /api/students/{id}        按学生 ID 查看详情
 PUT    /api/students/{id}        全量更新
 PATCH  /api/students/{id}        部分更新
 DELETE /api/students/{id}        仅管理员
+```
+
+**学生列表查询参数（均可选，可组合）：**
+
+| 参数 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `stu_no` | string | 学号忽略大小写模糊搜索 | `?stu_no=2024` |
+| `realname` | string | 姓名忽略大小写模糊搜索 | `?realname=张` |
+| `grade` | string | 年级编码精确匹配 | `?grade=GRADE_7` |
+| `class_id` | int | 班级 ID 精确匹配 | `?class_id=1` |
+
+示例：
+```
+GET /api/students?grade=GRADE_7&class_id=3
+→ 返回七年级 3 班的所有学生
 ```
 
 ### 创建 / 更新请求
@@ -325,7 +375,9 @@ DELETE /api/students/{id}        仅管理员
     "age": 14,
     "gender": "MALE",
     "class_id": 1,
-    "class_name": "一年级1班"
+    "class_name": "1班",
+    "grade": "GRADE_1",
+    "grade_display": "一年级"
 }
 ```
 

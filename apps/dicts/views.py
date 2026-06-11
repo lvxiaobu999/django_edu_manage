@@ -19,18 +19,23 @@
     通用规则：字段名__查询方式，多层关联用 __ 串联。
 """
 
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
+from apps.core.choices import GradeChoices
 from apps.core.pagination import StandardResultsSetPagination
 from apps.core.viewsets import BaseViewSet
 from apps.dicts.models import ClassDict, ResearchGroupDict, SemesterDict, SubjectDict
 from apps.dicts.serializers import (
     ClassDictSerializer,
+    ClassSimpleSerializer,
+    GradeClassesItemSerializer,
     ResearchGroupDictSerializer,
     SemesterDictSerializer,
     SubjectDictSerializer,
 )
+from django_edu_manage.common.response import ok
 
 
 @extend_schema_view(
@@ -140,3 +145,41 @@ class ClassDictViewSet(BaseViewSet):
             qs = qs.filter(headmaster__realname__icontains=headmaster)
 
         return qs
+
+    @extend_schema(
+        summary='年级班级联动',
+        description='返回所有年级及其下班级的级联数据，用于前端年级-班级二级联动下拉。',
+        responses={200: GradeClassesItemSerializer(many=True)},
+    )
+    @action(detail=False, methods=['get'], url_path='grade-classes')
+    def grade_classes(self, request):
+        """年级-班级二级联动接口。
+
+        遍历所有年级枚举，按年级分组返回该年级下的班级列表。
+        无班级的年级也返回，classes 为空数组。
+        """
+        # 一次查询所有班级，按年级+班级名排序
+        all_classes = ClassDict.objects.order_by('grade', 'name')
+
+        print('grade_classes: all_classes =', all_classes)  # 调试输出，查看查询结果
+
+        # 按年级分组
+        grade_map = {}
+        for c in all_classes:
+            grade_map.setdefault(c.grade, []).append(c)
+
+        print('grade_classes: grade_map =', grade_map)  # 调试输出，查看分组结果
+
+        result = []
+        for g in GradeChoices:
+            classes = grade_map.get(g.value, [])
+            result.append({
+                'grade_id': g.value,
+                'grade_name': g.label,
+                'classes': [
+                    {'class_id': cls.id, 'class_name': cls.name}
+                    for cls in classes
+                ],
+            })
+
+        return ok(data=result, message='查询成功')

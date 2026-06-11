@@ -1,6 +1,20 @@
 from rest_framework import serializers
 
+from apps.core.choices import GradeChoices
 from apps.dicts.models import ClassDict, ResearchGroupDict, SemesterDict, SubjectDict
+
+
+class ClassSimpleSerializer(serializers.Serializer):
+    """年级-班级联动接口中的班级信息。"""
+    class_id = serializers.IntegerField()
+    class_name = serializers.CharField()
+
+
+class GradeClassesItemSerializer(serializers.Serializer):
+    """年级-班级联动接口中单个年级及其班级列表。"""
+    grade_id = serializers.CharField()
+    grade_name = serializers.CharField()
+    classes = ClassSimpleSerializer(many=True)
 
 
 class SubjectDictSerializer(serializers.ModelSerializer):
