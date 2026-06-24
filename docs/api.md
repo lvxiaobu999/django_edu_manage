@@ -108,7 +108,7 @@ API 文档
 └── /api/exams               考试计划（完整 CRUD + exam_type/grade/semester 筛选）
 
 成绩管理
-└── /api/scores              成绩记录（完整 CRUD）
+└── /api/scores              成绩记录（完整 CRUD + exam/subject/student/grade/class_id 筛选）
 
 仪表盘
 └── /api/dashboard/stats     统计数据（支持 ?grade= 参数）
@@ -509,6 +509,27 @@ GET /api/exams?exam_type=MONTHLY&grade=SENIOR_1&semester=3
 ## 成绩管理
 
 核心枢纽表，将学生、考试、科目绑定。同一学生 + 同一考试 + 同一科目只能有一条记录（唯一约束）。
+
+### 成绩列表查询参数
+
+`GET /api/scores` 支持以下可选查询参数，可任意组合：
+
+| 参数 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `exam` | int | 考试 ID 精确匹配 | `?exam=1` |
+| `subject` | int | 科目 ID 精确匹配 | `?subject=2` |
+| `student` | string | 学生姓名忽略大小写模糊搜索 | `?student=张` |
+| `grade` | string | 年级编码精确匹配（通过学生→班级级联） | `?grade=GRADE_7` |
+| `class_id` | int | 班级 ID 精确匹配（通过学生→班级级联） | `?class_id=3` |
+
+示例：
+```
+GET /api/scores?exam=1&grade=GRADE_7
+→ 返回某次考试七年级所有学生的成绩
+
+GET /api/scores?subject=2&class_id=3
+→ 返回某科目在 3 班的所有成绩
+```
 
 ### 录入成绩 `POST /api/scores`
 
