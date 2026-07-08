@@ -160,9 +160,6 @@ class ClassDictViewSet(BaseViewSet):
         """
         # 一次查询所有班级，按年级+班级名排序
         all_classes = ClassDict.objects.order_by('grade', 'name')
-
-        print('grade_classes: all_classes =', all_classes)  # 调试输出，查看查询结果
-
         # 按年级分组
         grade_map = {}
         for c in all_classes:

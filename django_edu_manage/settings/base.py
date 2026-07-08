@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     'apps.exam.apps.ExamConfig',
     'apps.score.apps.ScoreConfig',
     'apps.dashboard.apps.DashboardConfig',
+    'apps.agent.apps.AgentConfig',
     'drf_spectacular',  # OpenAPI 3.0 自动生成 & Swagger UI
 ]
 

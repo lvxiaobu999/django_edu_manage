@@ -47,6 +47,12 @@
 仪表盘：
   path('api/dashboard/', include('apps.dashboard.urls'))
     → GET /api/dashboard/stats
+
+AI 助手（apps.agent）：
+  path('api/', include('apps.agent.urls'))
+    → POST   /api/agent/chat           → 单次问答
+    → POST   /api/agent/chat/session   → 带记忆的多轮对话
+    → DELETE /api/agent/chat/session   → 清除会话记忆
 """
 from django.contrib import admin
 from django.urls import include, path
@@ -72,4 +78,5 @@ urlpatterns = [
     path('api/', include('apps.exam.urls')),
     path('api/', include('apps.score.urls')),
     path('api/dashboard/', include('apps.dashboard.urls')),
+    path('api/', include('apps.agent.urls')),
 ]
