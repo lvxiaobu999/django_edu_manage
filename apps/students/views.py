@@ -7,6 +7,14 @@
     class_id  — 班级 ID 精确匹配，如 ?class_id=1
 """
 
+from zipfile import BadZipFile
+
+from django.http import HttpResponse
+from openpyxl.utils.exceptions import InvalidFileException
+from drf_spectacular.types import OpenApiTypes
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
@@ -15,8 +23,14 @@ from apps.core.pagination import StandardResultsSetPagination
 from apps.core.permissions import IsRole
 from apps.core.query_params import get_choice_param, get_int_param, get_str_param
 from apps.core.viewsets import BaseViewSet
+from apps.students.importers import build_student_import_template, import_students_from_excel
 from apps.students.models import StudentProfile
-from apps.students.serializers import StudentProfileSerializer
+from apps.students.serializers import (
+    StudentImportExcelSerializer,
+    StudentImportResultSerializer,
+    StudentProfileSerializer,
+)
+from django_edu_manage.common.response import fail, ok
 
 
 @extend_schema_view(
@@ -85,8 +99,68 @@ class StudentProfileViewSet(BaseViewSet):
         # 最终统一排序，配合分页返回稳定结果。
         return qs.order_by('id')
 
+    @extend_schema(
+        summary='下载学生 Excel 导入模板',
+        description='管理员下载学生导入模板。模板包含表头、示例行和填写说明，下载后填写数据再调用导入接口上传。',
+        responses={
+            (200, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'): OpenApiTypes.BINARY,
+        },
+    )
+    @action(detail=False, methods=['get'], url_path='import-template')
+    def import_template(self, request):
+        content = build_student_import_template()
+        response = HttpResponse(
+            content,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="student_import_template.xlsx"'
+        return response
+
+    @extend_schema(
+        summary='Excel 导入学生信息',
+        description=(
+            '管理员上传 .xlsx 文件批量导入学生账号和学生档案。'
+            '第一行为表头，必填列为“学号”和“姓名”；可选列包括“用户名、手机号、邮箱、地址、年龄、性别、班级ID、年级、班级、密码”。'
+            '若不填“用户名”，默认使用学号作为用户名；若不填“密码”，使用 default_password。'
+            '导入前会先校验整张表，任意行有错误则本次不写入任何数据，并返回错误行号。'
+        ),
+        request=StudentImportExcelSerializer,
+        responses={200: StudentImportResultSerializer},
+    )
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='import-excel',
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def import_excel(self, request):
+        serializer = StudentImportExcelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            result = import_students_from_excel(
+                serializer.validated_data['file'],
+                default_password=serializer.validated_data.get('default_password') or 'z123456.',
+            )
+        except (BadZipFile, InvalidFileException):
+            return fail(
+                message='Excel 文件格式无效，请上传 .xlsx 文件',
+                code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if result['errors']:
+            return fail(
+                message='导入失败，请根据 errors 修正 Excel 后重新上传',
+                code=400,
+                data=result,
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return ok(data=result, message='导入成功')
+
     def get_permissions(self):
-        if self.action in ('list', 'destroy'):
+        if self.action in ('list', 'destroy', 'import_excel', 'import_template'):
             return [IsAuthenticated(), IsRole('ADMIN')()]
         return [IsAuthenticated(), IsRole(['STUDENT', 'ADMIN'])()]
 
