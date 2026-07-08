@@ -1,7 +1,9 @@
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
+from apps.core.choices import ExamTypeChoices, GradeChoices
 from apps.core.pagination import StandardResultsSetPagination
+from apps.core.query_params import get_choice_param, get_int_param
 from apps.core.viewsets import BaseViewSet
 from apps.exam.models import ExamPlan
 from apps.exam.serializers import ExamPlanSerializer
@@ -27,24 +29,30 @@ from apps.exam.serializers import ExamPlanSerializer
     destroy=extend_schema(summary='删除考试'),
 )
 class ExamPlanViewSet(BaseViewSet):
-    queryset = ExamPlan.objects.all()
+    # semester 是外键，select_related 可一次 JOIN 查出学期展示字段，避免序列化时再查库。
+    # 按考试日期倒序 + id 排序，让列表和分页结果稳定、符合“最近考试优先”的阅读习惯。
+    queryset = ExamPlan.objects.select_related('semester').order_by('-exam_date', 'id')
     serializer_class = ExamPlanSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        # 列表查询同样预加载 semester，后续按考试类型、年级、学期逐步过滤。
         qs = ExamPlan.objects.select_related('semester')
 
-        exam_type = self.request.query_params.get('exam_type', '').strip()
+        # exam_type/grade 都是枚举值，先校验再过滤，避免无效参数悄悄返回空结果或造成异常。
+        exam_type = get_choice_param(self.request.query_params, 'exam_type', ExamTypeChoices.values)
         if exam_type:
             qs = qs.filter(exam_type=exam_type)
 
-        grade = self.request.query_params.get('grade', '').strip()
+        grade = get_choice_param(self.request.query_params, 'grade', GradeChoices.values)
         if grade:
             qs = qs.filter(grade=grade)
 
-        semester = self.request.query_params.get('semester', '').strip()
+        # semester 是外键 ID，先转整数，非法输入会走统一异常响应。
+        semester = get_int_param(self.request.query_params, 'semester')
         if semester:
             qs = qs.filter(semester_id=semester)
 
-        return qs
+        # 统一排序，保证分页时每次请求的顺序一致。
+        return qs.order_by('-exam_date', 'id')

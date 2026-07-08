@@ -4,11 +4,12 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from apps.core.choices import GradeChoices
+from apps.core.query_params import get_choice_param
 from apps.dashboard.serializers import DashboardStatsSerializer
 from apps.dicts.models import ClassDict, ResearchGroupDict
 from apps.students.models import StudentProfile
 from apps.teachers.models import TeacherProfile
-from django_edu_manage.common.response import fail, ok
+from django_edu_manage.common.response import ok
 
 
 class DashboardStatsView(APIView):
@@ -33,13 +34,11 @@ class DashboardStatsView(APIView):
         }
 
         # === 分布统计 ===
-        grade = request.query_params.get('grade', '').strip()
+        # grade 是可选枚举参数，先校验再分支统计，避免无效年级编码继续执行查询。
+        grade = get_choice_param(request.query_params, 'grade', GradeChoices.values)
 
         if grade:
             # 指定了年级 → 统计该年级下各班级的学生人数
-            if grade not in GradeChoices.values:
-                return fail(message=f'无效的年级参数: {grade}', code=1)
-
             grade_label = dict(GradeChoices.choices)[grade]
             # 用 Classes 为主表左连 students（related_name），
             # 即使某班没有学生也能显示 count=0
@@ -58,12 +57,18 @@ class DashboardStatsView(APIView):
         else:
             # 未指定年级（全校）→ 统计各年级的学生人数
             # 遍历所有年级枚举，确保没有学生的年级也显示 count=0
+            # 全校年级分布用一次 GROUP BY 聚合查询完成，避免每个年级单独 count() 造成多次查库。
+            grade_counts = dict(
+                StudentProfile.objects
+                .filter(class_id__grade__isnull=False)
+                .values('class_id__grade')
+                .annotate(count=Count('id'))
+                .values_list('class_id__grade', 'count')
+            )
             distribution = []
             for value, label in GradeChoices.choices:
-                count = StudentProfile.objects.filter(
-                    class_id__grade=value
-                ).count()
-                distribution.append({'label': label, 'count': count})
+                # 按枚举补齐所有年级；没有学生的年级显示为 0，前端不用再补数据。
+                distribution.append({'label': label, 'count': grade_counts.get(value, 0)})
             description = '各年级人数'
 
         data = DashboardStatsSerializer({

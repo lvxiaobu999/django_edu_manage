@@ -26,7 +26,8 @@ class PendingUserListView(ListAPIView):
     permission_classes = [IsAuthenticated, IsApprovedAdmin]
 
     def get_queryset(self):
-        return User.objects.filter(is_approved=False)
+        # 待审核列表按 id 稳定排序，分页时结果顺序更可预期。
+        return User.objects.filter(is_approved=False).order_by('id')
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
@@ -42,7 +43,8 @@ class PendingUserListView(ListAPIView):
     destroy=extend_schema(summary='删除用户'),
 )
 class UserViewSet(BaseViewSet):
-    queryset = User.objects.all()
+    # 用户列表按 id 稳定排序，避免分页数据在默认数据库顺序下出现抖动。
+    queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsApprovedAdmin]
     pagination_class = StandardResultsSetPagination
@@ -56,6 +58,7 @@ class UserViewSet(BaseViewSet):
                         status_code=status.HTTP_400_BAD_REQUEST)
         user.is_approved = True
         user.is_active = True
-        user.save()
+        # 这里只更新审核相关字段，避免 save() 把 username/email/role 等无关字段也写回数据库。
+        user.save(update_fields=['is_approved', 'is_active'])
         logger.info('管理员审核用户通过: user_id=%s, admin_id=%s', user.id, request.user.id)
         return ok(data=self.get_serializer(user).data)

@@ -25,6 +25,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiPara
 
 from apps.core.choices import GradeChoices
 from apps.core.pagination import StandardResultsSetPagination
+from apps.core.query_params import get_choice_param, get_str_param
 from apps.core.viewsets import BaseViewSet
 from apps.dicts.models import ClassDict, ResearchGroupDict, SemesterDict, SubjectDict
 from apps.dicts.serializers import (
@@ -48,7 +49,8 @@ from django_edu_manage.common.response import ok
 )
 class SubjectDictViewSet(BaseViewSet):
     """科目字典。"""
-    queryset = SubjectDict.objects.all()
+    # 字典表默认按 id 排序，保证分页/列表返回顺序稳定。
+    queryset = SubjectDict.objects.order_by('id')
     serializer_class = SubjectDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
@@ -64,7 +66,8 @@ class SubjectDictViewSet(BaseViewSet):
 )
 class SemesterDictViewSet(BaseViewSet):
     """学期字典。"""
-    queryset = SemesterDict.objects.all()
+    # 学期通常希望最新的排在前面，因此按 name 倒序。
+    queryset = SemesterDict.objects.order_by('-name')
     serializer_class = SemesterDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
@@ -80,7 +83,8 @@ class SemesterDictViewSet(BaseViewSet):
 )
 class ResearchGroupDictViewSet(BaseViewSet):
     """教研组字典 — 字段简单，无关联表。"""
-    queryset = ResearchGroupDict.objects.all()
+    # 简单字典表使用稳定排序即可。
+    queryset = ResearchGroupDict.objects.order_by('id')
     serializer_class = ResearchGroupDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
@@ -112,7 +116,9 @@ class ClassDictViewSet(BaseViewSet):
         name       — 班级名模糊搜索（忽略大小写），如 ?name=1  → 匹配 "1班"、"10班"、"11班"
         headmaster — 班主任姓名模糊搜索（忽略大小写），如 ?headmaster=张
     """
-    queryset = ClassDict.objects.all()
+    # headmaster 是外键，预加载后序列化 headmaster_name 不会再额外查库。
+    # 按年级、班级名排序，方便前端直接展示年级下的班级列表。
+    queryset = ClassDict.objects.select_related('headmaster').order_by('grade', 'name')
     serializer_class = ClassDictSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
@@ -123,18 +129,19 @@ class ClassDictViewSet(BaseViewSet):
         # 参数填的是模型上的 FK 字段名 headmaster，不是数据库列名 headmaster_id。
         qs = ClassDict.objects.select_related('headmaster')
 
-        grade = self.request.query_params.get('grade', '').strip()
+        # grade 是枚举字段，先校验再过滤，避免无效年级编码进入查询。
+        grade = get_choice_param(self.request.query_params, 'grade', GradeChoices.values)
         if grade:
             # grade 是 ClassDict 自己的字段，直接用等值匹配
             qs = qs.filter(grade=grade)
 
-        name = self.request.query_params.get('name', '').strip()
+        name = get_str_param(self.request.query_params, 'name')
         if name:
             # name__icontains：对 ClassDict.name 做忽略大小写的模糊匹配
             # 等价 SQL: WHERE dict_class.name LIKE '%name%' COLLATE NOCASE
             qs = qs.filter(name__icontains=name)
 
-        headmaster = self.request.query_params.get('headmaster', '').strip()
+        headmaster = get_str_param(self.request.query_params, 'headmaster')
         if headmaster:
             # headmaster__realname__icontains：
             #   headmaster   → 沿 FK 跨到 teacher_profile 表
@@ -144,7 +151,8 @@ class ClassDictViewSet(BaseViewSet):
             #           WHERE teacher_profile.realname LIKE '%headmaster%'
             qs = qs.filter(headmaster__realname__icontains=headmaster)
 
-        return qs
+        # 筛选后仍保持统一排序，保证分页和下拉选项顺序稳定。
+        return qs.order_by('grade', 'name')
 
     @extend_schema(
         summary='年级班级联动',
@@ -158,14 +166,12 @@ class ClassDictViewSet(BaseViewSet):
         遍历所有年级枚举，按年级分组返回该年级下的班级列表。
         无班级的年级也返回，classes 为空数组。
         """
-        # 一次查询所有班级，按年级+班级名排序
+        # 一次查询所有班级，按年级+班级名排序；这里不再 print 调试信息，避免污染服务日志。
         all_classes = ClassDict.objects.order_by('grade', 'name')
         # 按年级分组
         grade_map = {}
         for c in all_classes:
             grade_map.setdefault(c.grade, []).append(c)
-
-        print('grade_classes: grade_map =', grade_map)  # 调试输出，查看分组结果
 
         result = []
         for g in GradeChoices:

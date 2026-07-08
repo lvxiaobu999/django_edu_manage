@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -39,6 +41,9 @@ class User(AbstractUser):
         db_table = 'user'
         verbose_name = '用户'
         verbose_name_plural = verbose_name
+
+    if TYPE_CHECKING:
+        def get_role_display(self) -> str: ...
 
     def __str__(self):
         # get_role_display() 返回的是角色枚举的中文名（如 '学生'）

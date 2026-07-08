@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from apps.core.pagination import StandardResultsSetPagination
 from apps.core.permissions import IsRole
+from apps.core.query_params import get_str_param
 from apps.core.viewsets import BaseViewSet
 from apps.teachers.models import TeacherProfile
 from apps.teachers.serializers import TeacherProfileSerializer
@@ -28,27 +29,36 @@ from apps.teachers.serializers import TeacherProfileSerializer
     destroy=extend_schema(summary='删除教师简介', description='仅管理员可用。'),
 )
 class TeacherProfileViewSet(BaseViewSet):
-    queryset = TeacherProfile.objects.select_related('user').all()
+    # select_related('user')：user 是一对一关系，使用 SQL JOIN 一次查出，避免访问 user 时再查库。
+    # prefetch_related(...)：research_groups/class_ids 是多对多关系，批量预取可避免教师列表序列化时出现 N+1 查询。
+    queryset = TeacherProfile.objects.select_related('user').prefetch_related(
+        'research_groups',
+        'class_ids',
+    ).order_by('id')
     serializer_class = TeacherProfileSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        qs = TeacherProfile.objects.select_related('user')
+        # 这里和 queryset 保持一致：基础查询先预加载序列化会用到的关联数据，再叠加角色和查询参数过滤。
+        qs = TeacherProfile.objects.select_related('user').prefetch_related(
+            'research_groups',
+            'class_ids',
+        )
 
         if self.request.user.role != 'ADMIN':
-            return qs.filter(user=self.request.user)
+            return qs.filter(user=self.request.user).order_by('id')
         
         # 查询参数过滤
-        emp_no = self.request.query_params.get('emp_no', '').strip()
+        emp_no = get_str_param(self.request.query_params, 'emp_no')
         if emp_no:
             qs = qs.filter(emp_no__icontains=emp_no)
-        realname = self.request.query_params.get('realname', '').strip()
+        realname = get_str_param(self.request.query_params, 'realname')
         if realname:
             qs = qs.filter(realname__icontains=realname)
 
 
-        return qs
+        return qs.order_by('id')
 
     def get_permissions(self):
         if self.action in ('list', 'destroy'):
