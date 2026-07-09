@@ -1,5 +1,13 @@
 """成绩 ViewSet —— 完整 CRUD，支持按考试、科目、学生、年级、班级筛选。"""
 
+from zipfile import BadZipFile
+
+from django.http import HttpResponse
+from openpyxl.utils.exceptions import InvalidFileException
+from drf_spectacular.types import OpenApiTypes
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
@@ -7,8 +15,14 @@ from apps.core.choices import GradeChoices
 from apps.core.pagination import StandardResultsSetPagination
 from apps.core.query_params import get_choice_param, get_int_param, get_str_param
 from apps.core.viewsets import BaseViewSet
+from apps.score.importers import build_score_import_template, import_scores_from_excel
 from apps.score.models import Score
-from apps.score.serializers import ScoreSerializer
+from apps.score.serializers import (
+    ScoreImportExcelSerializer,
+    ScoreImportResultSerializer,
+    ScoreSerializer,
+)
+from django_edu_manage.common.response import fail, ok
 
 
 @extend_schema_view(
@@ -78,3 +92,63 @@ class ScoreViewSet(BaseViewSet):
 
         # 按考试、学生、科目排序，成绩列表更便于前端分组展示，也避免分页顺序不稳定。
         return qs.order_by('exam_id', 'student_id', 'subject_id')
+
+    @extend_schema(
+        summary='下载成绩 Excel 导入模板',
+        description='下载学生成绩导入模板。模板包含填写 sheet、考试列表 sheet、科目列表 sheet，方便录入考试ID和科目ID。',
+        responses={
+            (200, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'): OpenApiTypes.BINARY,
+        },
+    )
+    @action(detail=False, methods=['get'], url_path='import-template')
+    def import_template(self, request):
+        content = build_score_import_template()
+        response = HttpResponse(
+            content,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="score_import_template.xlsx"'
+        return response
+
+    @extend_schema(
+        summary='Excel 导入学生成绩',
+        description=(
+            '上传 .xlsx 文件批量导入学生成绩。'
+            '必填列为“学号、分数”，并且“考试ID/考试名称”二选一、“科目ID/科目名称”二选一。'
+            '默认遇到已存在成绩时报错；传 overwrite=true 时会覆盖更新已有成绩。'
+            '导入前会先校验整张表，任意行有错误则本次不写入任何数据。'
+        ),
+        request=ScoreImportExcelSerializer,
+        responses={200: ScoreImportResultSerializer},
+    )
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='import-excel',
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def import_excel(self, request):
+        serializer = ScoreImportExcelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            result = import_scores_from_excel(
+                serializer.validated_data['file'],
+                overwrite=serializer.validated_data.get('overwrite', False),
+            )
+        except (BadZipFile, InvalidFileException):
+            return fail(
+                message='Excel 文件格式无效，请上传 .xlsx 文件',
+                code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if result['errors']:
+            return fail(
+                message='导入失败，请根据 errors 修正 Excel 后重新上传',
+                code=400,
+                data=result,
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return ok(data=result, message='导入成功')
